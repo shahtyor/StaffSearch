@@ -1,0 +1,45 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="StaffSearch.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="gate_time_offset" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MOWR228SG</Value>
+    </Setting>
+    <Setting Name="AmadeusName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">WSRUITPA</Value>
+    </Setting>
+    <Setting Name="AmadeusPass" Type="System.String" Scope="User">
+      <Value Profile="(Default)">NHI/SFJnWDdxWSQj</Value>
+    </Setting>
+    <Setting Name="AmadeusPCI" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ATL1S2484</Value>
+    </Setting>
+    <Setting Name="AlexAmadeusName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">WSS7TS7T</Value>
+    </Setting>
+    <Setting Name="AlexAmadeusPass" Type="System.String" Scope="User">
+      <Value Profile="(Default)">YTBHazhUMT0=</Value>
+    </Setting>
+    <Setting Name="AlexAmadeusPCI" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MOWR228SG</Value>
+    </Setting>
+    <Setting Name="AmplitudeUserID" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TicketAPI8033</Value>
+    </Setting>
+    <Setting Name="UseProxy" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="UrlProxy" Type="System.String" Scope="User">
+      <Value Profile="(Default)">http://srv2.globalreservation.com:3128</Value>
+    </Setting>
+    <Setting Name="LogProxy" Type="System.String" Scope="User">
+      <Value Profile="(Default)">staff_airlines</Value>
+    </Setting>
+    <Setting Name="ParProxy" Type="System.String" Scope="User">
+      <Value Profile="(Default)">hZgWt4FrYcnVm9qD</Value>
+    </Setting>
+    <Setting Name="cache_time_offset_hour" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">24</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
