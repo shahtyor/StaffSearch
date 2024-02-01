@@ -23,10 +23,10 @@ namespace StaffSearch
         static ObjectCache cache = MemoryCache.Default;
         static CacheItemPolicy policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10) };
 
-        //public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae");
-        public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = OVBtoBAX1972; Database = sae");
+        public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae");
+        //public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = OVBtoBAX1972; Database = sae");
 
-        const string Url = "https://api.staffairlines.com:8033/api";
+        const string Url = "http://dev-api.staffairlines.com:8033/api";
         const string username = "sae2";
         const string pwd = "ISTbetweenVAR1999";
 
@@ -63,11 +63,10 @@ namespace StaffSearch
                             reader.Dispose();
                             com.Dispose();
 
-                            NpgsqlCommand com3 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor, type=@type, id_user=@id_user where id=@id", conn);
+                            NpgsqlCommand com3 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor, id_user=@id_user where id=@id", conn);
                             com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
                             com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "type", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Smallint, Value = token.type });
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.id_user });
+                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.type + "_" + token.id_user });
 
                             eventLogBot.WriteEntry(com3.CommandText);
 
@@ -87,14 +86,13 @@ namespace StaffSearch
                             reader.Dispose();
                             com.Dispose();
 
-                            NpgsqlCommand com2 = new NpgsqlCommand("insert into telegram_user (id, first_use, own_ac, is_reporter, is_requestor, type, id_user) values (@id, @first_use, @own_ac, @is_reporter, @is_requestor, @type, @id_user)", conn);
+                            NpgsqlCommand com2 = new NpgsqlCommand("insert into telegram_user (id, first_use, own_ac, is_reporter, is_requestor, id_user) values (@id, @first_use, @own_ac, @is_reporter, @is_requestor, @id_user)", conn);
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "first_use", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Timestamp, Value = DateTime.Now });
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "own_ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Char, Value = "??" });
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_reporter", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = false });
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
-                            com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "type", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Smallint, Value = token.type });
-                            com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.id_user });
+                            com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.type + "_" + token.id_user });
 
                             eventLogBot.WriteEntry(com2.CommandText);
 
@@ -189,10 +187,9 @@ namespace StaffSearch
 
         public static bool TokenAlreadySet(sign_in token, long telegram_user)
         {
-            NpgsqlCommand com = new NpgsqlCommand("select count(*) from telegram_user where id<>@id and type=@type and id_user=@id_user", conn);
+            NpgsqlCommand com = new NpgsqlCommand("select count(*) from telegram_user where id<>@id and id_user=@id_user", conn);
             com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = telegram_user });
-            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "type", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Smallint, Value = token.type });
-            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.id_user });
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = token.type + "_" + token.id_user });
             var o = com.ExecuteScalar();
             //var cnt = (int)com.ExecuteScalar();
             int cnt = 0;
@@ -252,7 +249,7 @@ namespace StaffSearch
             int result = 10;
 
             NpgsqlCommand com0 = new NpgsqlCommand("select count(*) from telegram_request where id_requestor=@id_requestor and ts_create > now()-INTERVAL '1 month'", conn);
-            com0.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = query.From.Id });
+            com0.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = query.From.Id.ToString() });
             var obj = (long)com0.ExecuteScalar();
             var cntreq = Convert.ToInt32(obj);
             com0.Dispose();
@@ -268,10 +265,10 @@ namespace StaffSearch
 
                     DateTime DepartureDateTime = new DateTime(int.Parse(pars[3].Substring(4, 2)) + 2000, int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
 
-                    var msk_time = Methods.GetDepartureTime(pars[1], DepartureDateTime);
+                    var msk_time = GetDepartureTime(pars[1], DepartureDateTime);
 
                     NpgsqlCommand com = new NpgsqlCommand("insert into telegram_request (id_requestor, origin, destination, date_flight, time_flight, number_flight, desc_flight, departure_dt_msk) values (@id_requestor, @origin, @destination, @date_flight, @time_flight, @number_flight, @desc_flight, @departure_dt_msk)", conn);
-                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = query.From.Id });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = query.From.Id.ToString() });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
@@ -327,6 +324,30 @@ namespace StaffSearch
                     {
                         string json = await response.Content.ReadAsStringAsync();
                         ExtendedResult result = JsonConvert.DeserializeObject<ExtendedResult>(json);
+                        result.Alert = Uri;
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ExtendedResult() { Alert = ex.Message + "..." + ex.StackTrace };
+            }
+            return new ExtendedResult();
+        }
+
+        public static async Task<ProfileTokens> TokenProfile(string id_user)
+        {
+            try
+            {
+                using (HttpClient client = GetClient())
+                {
+                    string Uri = Url + "/token/Profile?id_user=" + id_user;
+                    var response = await client.GetAsync(Uri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        ProfileTokens result = JsonConvert.DeserializeObject<ProfileTokens>(json);
                         return result;
                     }
                 }
@@ -335,7 +356,7 @@ namespace StaffSearch
             {
                 string s = "123";
             }
-            return new ExtendedResult();
+            return new ProfileTokens();
         }
 
         public static DateTime GetDepartureTime(string iata, DateTime dt)
@@ -363,7 +384,7 @@ namespace StaffSearch
             else
             {
                 var dt = GetAmadCurrentTime(iata);
-                result = (int)(DateTime.Now - dt).TotalMinutes;
+                result = (int)(dt - DateTime.Now).TotalMinutes;
                 cache.Add(keyts, result, policydir);
             }
 

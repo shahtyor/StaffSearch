@@ -238,12 +238,15 @@ namespace StaffSearch
                 }
 
                 var command = message?.Text;
+
+                eventLogBot.WriteEntry("command: " + command);
+
                 if (command != null && command[0] == '/' && user != null)
                 {
                     command = command.Remove(0, 1);
                 }
 
-                if (command != null && command[0] != '/' && command?.Length >= 6 && user != null)
+                if (command != null && command[0] != '/' && command?.Length >= 6)
                 {
                     var comsplit = command.Split('/');
                     var From = comsplit[0].Substring(0, 3).ToUpper();
@@ -298,49 +301,87 @@ namespace StaffSearch
                         searchdt = DateTime.Today;
                     }
 
-                    var findbeg = "Search from " + From + " to " + To + " on " + searchdt.ToString("MMMM d", CultureInfo.CreateSpecificCulture("en-US")) + " for " + pax + " pax";
-                    await botClient.SendTextMessageAsync(message.Chat, findbeg);
+                    var DepNow = Methods.GetDepartureTime(From, DateTime.Now);
 
-                    if (user.permitted_ac == null) user.permitted_ac = "";
+                    eventLogBot.WriteEntry("DepNow: " + DepNow.ToString("dd-MM-yyyy HH:mm") + ", user=" + user?.id + ", token=" + user?.Token?.id_user);
 
-                    ExtendedResult exres0 = await Methods.ExtendedSearch(From, To, searchdt, user.permitted_ac, false, GetNonDirectType.Off, pax, "USD", "EN", "RU", "bot" + message.Chat.Id, false, "3.0");
-                    user.exres = exres0;
-                    UpdateUserInCache(user);
-
-                    if (exres0.DirectRes?.Count > 0)
+                    bool SearchAvailable = true;
+                    if (DepNow.Date != searchdt.Date)
                     {
-                        string res = string.Empty;
-                        int i = 0;
-                        var dlen = exres0.DirectRes.Max(x => x.DepartureTerminal.Length);
-                        var alen = exres0.DirectRes.Max(x => x.ArrivalTerminal.Length);
-                        foreach (Flight fl in exres0.DirectRes)
+                        if (user == null || user.Token == null)
                         {
-                            i++;
-
-                            string srat = "";
-                            if (fl.Rating == RType.Red)
-                            {
-                                srat = "\uD83D\uDD34";
-                            }
-                            else if (fl.Rating == RType.Yellow)
-                            {
-                                srat = "\uD83D\uDFE1";
-                            }
-                            else
-                            {
-                                srat = "\uD83D\uDFE2";
-                            }
-
-                            var NextDay = fl.DepartureDateTime.Day != fl.ArrivalDateTime.Day ? "+1/" : "   ";
-
-                            res = res + "<code>" + i.ToString().PadLeft(2, ' ') + " " + fl.MarketingCarrier + " " + fl.DepartureDateTime.ToString("HH:mm") + " " + fl.Origin + " " +
-                                fl.ArrivalDateTime.ToString("HH:mm") + " " + fl.Destination + " </code> " + srat + "<code>" + (fl.AllPlaces.LastOrDefault() == '+' ? fl.AllPlaces.PadLeft(3, ' ') : fl.AllPlaces.PadLeft(2, ' ')) + "</code>" + Environment.NewLine;
+                            await botClient.SendTextMessageAsync(message.Chat, "Для поиска не на текущую дату необходимо авторизоваться (/profile)");
+                            SearchAvailable = false;
                         }
-                        await botClient.SendTextMessageAsync(message.Chat, res, null, Telegram.Bot.Types.Enums.ParseMode.Html);
+                        else
+                        {
+                            var Prof = await Methods.TokenProfile(user.Token.id_user);
+
+                            eventLogBot.WriteEntry("Prof: " + Prof.SubscribeTokens + "-" + Prof.NonSubscribeTokens + "-" + Prof.Premium.ToString());
+
+                            if (!Prof.Premium)
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "Для поиска на любую дату необходимо приобрести подписку");
+                                SearchAvailable = false;
+                            }
+                        }
                     }
-                    else
+
+                    if (SearchAvailable)
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) ? "Not Found!" : exres0.Alert);
+                        var findbeg = "Search from " + From + " to " + To + " on " + searchdt.ToString("MMMM d", CultureInfo.CreateSpecificCulture("en-US")) + " for " + pax + " pax";
+                        await botClient.SendTextMessageAsync(message.Chat, findbeg);
+
+                        if (user == null)
+                        {
+                            user = new telegram_user() { id = message.Chat.Id };
+                        }
+                        if (user.permitted_ac == null) user.permitted_ac = "";
+
+                        eventLogBot.WriteEntry("permitted_ac: " + user?.permitted_ac);
+
+                        ExtendedResult exres0 = await Methods.ExtendedSearch(From, To, searchdt, user.permitted_ac, false, GetNonDirectType.Off, pax, "USD", "EN", "RU", "bot" + message.Chat.Id, false, "3.0");
+                        user.exres = exres0;
+
+                        eventLogBot.WriteEntry("DirectRes.Count: " + exres0.DirectRes?.Count + ", Uri=" + exres0.Alert);
+
+                        UpdateUserInCache(user);
+
+                        if (exres0.DirectRes?.Count > 0)
+                        {
+                            string res = string.Empty;
+                            int i = 0;
+                            var dlen = exres0.DirectRes.Max(x => x.DepartureTerminal.Length);
+                            var alen = exres0.DirectRes.Max(x => x.ArrivalTerminal.Length);
+                            foreach (Flight fl in exres0.DirectRes)
+                            {
+                                i++;
+
+                                string srat = "";
+                                if (fl.Rating == RType.Red)
+                                {
+                                    srat = "\uD83D\uDD34";
+                                }
+                                else if (fl.Rating == RType.Yellow)
+                                {
+                                    srat = "\uD83D\uDFE1";
+                                }
+                                else
+                                {
+                                    srat = "\uD83D\uDFE2";
+                                }
+
+                                var NextDay = fl.DepartureDateTime.Day != fl.ArrivalDateTime.Day ? "+1/" : "   ";
+
+                                res = res + "<code>" + i.ToString().PadLeft(2, ' ') + " " + fl.MarketingCarrier + " " + fl.DepartureDateTime.ToString("HH:mm") + " " + fl.Origin + " " +
+                                    fl.ArrivalDateTime.ToString("HH:mm") + " " + fl.Destination + " </code> " + srat + "<code>" + (fl.AllPlaces.LastOrDefault() == '+' ? fl.AllPlaces.PadLeft(3, ' ') : fl.AllPlaces.PadLeft(2, ' ')) + "</code>" + Environment.NewLine;
+                            }
+                            await botClient.SendTextMessageAsync(message.Chat, res, null, Telegram.Bot.Types.Enums.ParseMode.Html);
+                        }
+                        else
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) ? "Not Found!" : exres0.Alert);
+                        }
                     }
 
                     return;

@@ -682,3 +682,390 @@ System.Security.SecurityException: Запрошенный доступ к рее
 Предупреждение. Источник StaffSearchBot не зарегистрирован на локальном компьютере.
 Выполняется удаление службы StaffSearchBot из системы...
 Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\staffsearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\staffsearch.exe
+   logfile = F:\StaffSearch\bin\Debug\staffsearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется откат для сборки 'F:\StaffSearch\bin\Debug\staffsearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\staffsearch.exe
+   logfile = F:\StaffSearch\bin\Debug\staffsearch.InstallLog
+Восстанавливается исходное состояние журнала событий для источника StaffSearchBot.
+При выполнении программы установки System.Diagnostics.EventLogInstaller на этапе отката возникло исключение.
+System.Security.SecurityException: Источник не найден, но не удалось выполнить поиск по нескольким или всем журналам событий.  Недоступные журналы: Security, State.
+На этапе отката процедуры установки возникло исключение. Это исключение будет проигнорировано, и откат будет продолжен. Однако после завершения отката компьютер может не вернуться полностью в исходное состояние.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется откат для сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Восстанавливается исходное состояние журнала событий для источника StaffSearchBot.
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Предупреждение. Источник StaffSearchBot не зарегистрирован на локальном компьютере.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'F:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog

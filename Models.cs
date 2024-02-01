@@ -201,4 +201,13 @@ namespace StaffSearch
         public string Log { get; set; }
         public string Alert { get; set; }
     }
+
+    public class ProfileTokens
+    {
+        public int SubscribeTokens { get; set; }
+        public int NonSubscribeTokens { get; set; }
+        public bool Premium { get; set; }
+        public string Error { get; set; }
+        public string Timing { get; set; }
+    }
 }
