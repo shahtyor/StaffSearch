@@ -15,6 +15,7 @@ using System.Security.Policy;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using static System.Net.WebRequestMethods;
 
 namespace StaffSearch
 {
@@ -23,10 +24,11 @@ namespace StaffSearch
         static ObjectCache cache = MemoryCache.Default;
         static CacheItemPolicy policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10) };
 
-        public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae");
+        //public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae");
         //public static NpgsqlConnection conn = new NpgsqlConnection("Server = localhost; Port = 5432; User Id = postgres; Password = OVBtoBAX1972; Database = sae");
+        public static NpgsqlConnection conn = new NpgsqlConnection(Properties.Settings.Default.ConnectionString);
 
-        const string Url = "http://dev-api.staffairlines.com:8033/api";
+        //const string Url = "http://dev-api.staffairlines.com:8033/api";
         const string username = "sae2";
         const string pwd = "ISTbetweenVAR1999";
 
@@ -58,6 +60,8 @@ namespace StaffSearch
                         if (reader.Read())
                         {
                             user = new telegram_user() { id = (long)reader["id"], first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = true, Token = token };
+
+                            eventLogBot.WriteEntry("ProfileCommand. " + JsonConvert.SerializeObject(user));
 
                             reader.Close();
                             reader.Dispose();
@@ -244,12 +248,10 @@ namespace StaffSearch
             }
         }
 
-        public static int AddRequest(CallbackQuery query)
+        public static AddRequestResponse AddRequest(CallbackQuery query, string id_user)
         {
-            int result = 10;
-
             NpgsqlCommand com0 = new NpgsqlCommand("select count(*) from telegram_request where id_requestor=@id_requestor and ts_create > now()-INTERVAL '1 month'", conn);
-            com0.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = query.From.Id.ToString() });
+            com0.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
             var obj = (long)com0.ExecuteScalar();
             var cntreq = Convert.ToInt32(obj);
             com0.Dispose();
@@ -259,16 +261,18 @@ namespace StaffSearch
                 var pars = query.Data.Split(' ');
                 if (pars.Length == 6)
                 {
+                    var Coll = DebtToken(id_user).Result;
+
                     string desc = "";
                     var descexist = cache.Contains("key:" + pars[5]);
                     if (descexist) desc = (string)cache.Get("key:" + pars[5]);
 
                     DateTime DepartureDateTime = new DateTime(int.Parse(pars[3].Substring(4, 2)) + 2000, int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
 
-                    var msk_time = GetDepartureTime(pars[1], DepartureDateTime);
+                    var msk_time = GetDepartureTimeMsk(pars[1], DepartureDateTime);
 
-                    NpgsqlCommand com = new NpgsqlCommand("insert into telegram_request (id_requestor, origin, destination, date_flight, time_flight, number_flight, desc_flight, departure_dt_msk) values (@id_requestor, @origin, @destination, @date_flight, @time_flight, @number_flight, @desc_flight, @departure_dt_msk)", conn);
-                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = query.From.Id.ToString() });
+                    NpgsqlCommand com = new NpgsqlCommand("insert into telegram_request (id_requestor, origin, destination, date_flight, time_flight, number_flight, desc_flight, departure_dt_msk, subscribe_tokens, paid_tokens) values (@id_requestor, @origin, @destination, @date_flight, @time_flight, @number_flight, @desc_flight, @departure_dt_msk, @subscribe_tokens, @paid_tokens)", conn);
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
@@ -276,6 +280,9 @@ namespace StaffSearch
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "number_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[5] });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "desc_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = desc });
                     com.Parameters.Add(new NpgsqlParameter() { ParameterName = "departure_dt_msk", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Timestamp, Value = msk_time });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "subscribe_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtSubscribeTokens });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "paid_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtNonSubscribeTokens });
+
 
                     try
                     {
@@ -286,12 +293,13 @@ namespace StaffSearch
                         var e = ex.StackTrace;
                     }
                     com.Dispose();
+                    return new AddRequestResponse() { Cnt = 9 - cntreq, Tokens = Coll };
                 }
-                return 9 - cntreq;
+                return new AddRequestResponse();
             }
             else
             {
-                return -1;
+                return new AddRequestResponse() { Cnt = -1 };
             }
         }
 
@@ -318,13 +326,13 @@ namespace StaffSearch
             {
                 using (HttpClient client = GetClient())
                 {
-                    string Uri = Url + "/amadeus/ExtendedSearch?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd") + "&list=" + list + "&GetTransfer=" + GetTransfer.ToString() + "&GetNonDirect=" + ntype.ToString() + "&pax=" + pax + "&token=" + token + "&sa=" + sa.ToString() + "&ver=" + ver + "&ac=" + ac + "&currency=" + currency + "&lang=" + lang + "&country=" + country;
+                    string Uri = Properties.Settings.Default.UrlApi + "/amadeus/ExtendedSearch?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd") + "&list=" + list + "&GetTransfer=" + GetTransfer.ToString() + "&GetNonDirect=" + ntype.ToString() + "&pax=" + pax + "&token=" + token + "&sa=" + sa.ToString() + "&ver=" + ver + "&ac=" + ac + "&currency=" + currency + "&lang=" + lang + "&country=" + country;
                     var response = await client.GetAsync(Uri);
                     if (response.IsSuccessStatusCode)
                     {
                         string json = await response.Content.ReadAsStringAsync();
                         ExtendedResult result = JsonConvert.DeserializeObject<ExtendedResult>(json);
-                        result.Alert = Uri;
+                        //result.Alert = Uri;
                         return result;
                     }
                 }
@@ -342,7 +350,7 @@ namespace StaffSearch
             {
                 using (HttpClient client = GetClient())
                 {
-                    string Uri = Url + "/token/Profile?id_user=" + id_user;
+                    string Uri = Properties.Settings.Default.UrlApi + "/token/Profile?id_user=" + id_user;
                     var response = await client.GetAsync(Uri);
                     if (response.IsSuccessStatusCode)
                     {
@@ -354,14 +362,43 @@ namespace StaffSearch
             }
             catch (Exception ex)
             {
-                string s = "123";
+                return new ProfileTokens() { Error = ex.Message + "..." + ex.StackTrace };
             }
             return new ProfileTokens();
+        }
+
+        public static async Task<TokenCollection> DebtToken(string id_user)
+        {
+            try
+            {
+                using (HttpClient client = GetClient())
+                {
+                    string Uri = Properties.Settings.Default.UrlApi + "/token/DebtToken?id_user=" + id_user + "&type=oper&operation=request&amount=0";
+                    var response = await client.GetAsync(Uri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        TokenCollection result = JsonConvert.DeserializeObject<TokenCollection>(json);
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex) 
+            {
+                return new TokenCollection() { Error = ex.Message + "..." + ex.StackTrace };
+            }
+            return new TokenCollection();
         }
 
         public static DateTime GetDepartureTime(string iata, DateTime dt)
         {
             var result = dt.AddMinutes(GetTimeOffset(iata));
+            return result;
+        }
+
+        public static DateTime GetDepartureTimeMsk(string iata, DateTime dt)
+        {
+            var result = dt.AddMinutes(-GetTimeOffset(iata));
             return result;
         }
 

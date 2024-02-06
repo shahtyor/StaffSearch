@@ -210,4 +210,19 @@ namespace StaffSearch
         public string Error { get; set; }
         public string Timing { get; set; }
     }
+
+    public class TokenCollection
+    {
+        public int SubscribeTokens { get; set; }
+        public int NonSubscribeTokens { get; set; }
+        public int DebtSubscribeTokens { get; set; }
+        public int DebtNonSubscribeTokens { get; set; }
+        public string Error { get; set; }
+    }
+
+    public class AddRequestResponse
+    {
+        public int Cnt { get; set; }
+        public TokenCollection Tokens { get; set; }
+    }
 }
