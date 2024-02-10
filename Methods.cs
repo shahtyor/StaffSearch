@@ -446,7 +446,6 @@ namespace StaffSearch
             Amadeus Amad = new Amadeus(AmadeusName, AmadeusPass, AmadeusPCI, "c:\\xmlcrypt", "95be547554caecf51c57c691bafb2640", AmplitudeUserID, false, UseProxy, UrlProxy, LogProxy, ParProxy);
             Amadeus Amad2 = new Amadeus(AlexAmadeusName, AlexAmadeusPass, AlexAmadeusPCI, "c:\\xmlcrypt", "95be547554caecf51c57c691bafb2640", AmplitudeUserID, false, false, null, null, null);
 
-
             var gto = Properties.Settings.Default.gate_time_offset;
             DateTime result = new DateTime();
             if (gto == "MOWR228SG")
@@ -460,5 +459,106 @@ namespace StaffSearch
             return result;
         }
 
+        public static void SaveMessageParameters(long chat_id, int message_id, long request_id, short type)
+        {
+            NpgsqlCommand com = new NpgsqlCommand("insert into telegram_history (chat_id, message_id, request_id, type) values (@chat_id, @message_id, @request_id, @type)", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "chat_id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = chat_id });
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "message_id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = message_id });
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "request_id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = request_id });
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "type", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Smallint, Value = type });
+            com.ExecuteNonQuery();
+            com.Dispose();
+        }
+
+        public static TelMessage GetMessageParameters(long chat_id)
+        {
+            TelMessage result = null;
+            NpgsqlCommand com = new NpgsqlCommand("select message_id from telegram_history where chat_id=@chat_id and type=3", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "chat_id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = chat_id });
+            using (NpgsqlDataReader reader = com.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result = new TelMessage() { ChatId = chat_id, MessageId = (int)reader["message_id"] };
+                }
+                reader.Close();
+                reader.Dispose();
+            }
+            
+            com.Dispose();
+            return result;
+        }
+
+        public static void DelMessageParameters(long chat_id)
+        {
+            NpgsqlCommand com = new NpgsqlCommand("delete from telegram_history where chat_id=@chat_id and type=3", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "chat_id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = chat_id });
+            com.ExecuteNonQuery();
+            com.Dispose();
+        }
+
+        public static telegram_user GetUser(string id_user)
+        {
+            telegram_user user = null;
+
+            string keyus = "getuser:" + id_user;
+            var usexist = cache.Contains(keyus);
+            if (usexist) user = (telegram_user)cache.Get(keyus);
+            else
+            {
+                NpgsqlCommand com = new NpgsqlCommand("select * from telegram_user where id_user=@id_user", conn);
+                com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
+                NpgsqlDataReader reader = com.ExecuteReader();
+
+                if (reader.Read())
+                {
+                    var sid = reader["id"].ToString();
+                    long? iid = null;
+                    if (!string.IsNullOrEmpty(sid))
+                    {
+                        iid = long.Parse(sid);
+                    }
+                    user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), Token = new sign_in() { id_user = id_user } };
+
+                    cache.Add(keyus, user, policyuser);
+                }
+                reader.Close();
+                reader.Dispose();
+                com.Dispose();
+            }
+
+            return user;
+        }
+
+        public static telegram_user GetUser(long id)
+        {
+            telegram_user user = null;
+
+            NpgsqlCommand com = new NpgsqlCommand("select * from telegram_user where id=@id", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
+            NpgsqlDataReader reader = com.ExecuteReader();
+
+            if (reader.Read())
+            {
+                var sid = reader["id"].ToString();
+                long? iid = null;
+                if (!string.IsNullOrEmpty(sid))
+                {
+                    iid = long.Parse(sid);
+                }
+                user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString() };
+                var id_user = reader["id_user"].ToString();
+                if (!string.IsNullOrEmpty(id_user))
+                {
+                    user.Token = new sign_in() { id_user = id_user };
+                }
+            }
+
+            reader.Close();
+            reader.Dispose();
+            com.Dispose();
+
+            return user;
+        }
     }
 }

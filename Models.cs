@@ -5,7 +5,7 @@ namespace StaffSearch
 {
     public class telegram_user
     {
-        public long id { get; set; }
+        public long? id { get; set; }
         public DateTime first_use { get; set; }
         public string own_ac { get; set; }
         public bool is_reporter { get; set; }
@@ -224,5 +224,11 @@ namespace StaffSearch
     {
         public int Cnt { get; set; }
         public TokenCollection Tokens { get; set; }
+    }
+
+    public class TelMessage
+    {
+        public long ChatId { get; set; }
+        public int MessageId { get; set; }
     }
 }

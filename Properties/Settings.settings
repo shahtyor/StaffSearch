@@ -45,10 +45,13 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="ConnectionString" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Server = localhost; Port = 5432; User Id = postgres; Password = OVBtoBAX1972; Database = sae</Value>
+      <Value Profile="(Default)">Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae</Value>
     </Setting>
     <Setting Name="UrlApi" Type="System.String" Scope="User">
       <Value Profile="(Default)">http://dev-api.staffairlines.com:8033/api</Value>
+    </Setting>
+    <Setting Name="BotToken" Type="System.String" Scope="User">
+      <Value Profile="(Default)">6906986784:AAGWHhFXFQ3YVyu_c0fdJ1v13Pwsn5nbmBg</Value>
     </Setting>
   </Settings>
 </SettingsFile>

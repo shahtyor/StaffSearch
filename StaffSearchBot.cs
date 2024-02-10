@@ -22,7 +22,8 @@ namespace StaffSearch
 {
     public partial class StaffSearchBot : ServiceBase
     {
-        static ITelegramBotClient bot = new TelegramBotClient("6887022781:AAFHUUlU4japCWTaRli9BAx_aLM4d2vmFmU");
+        //static ITelegramBotClient bot = new TelegramBotClient("6887022781:AAFHUUlU4japCWTaRli9BAx_aLM4d2vmFmU");
+        static ITelegramBotClient bot = new TelegramBotClient(Properties.Settings.Default.BotToken);
         static ObjectCache cache = MemoryCache.Default;
         static CacheItemPolicy policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10) };
 
@@ -84,7 +85,9 @@ namespace StaffSearch
                 serviceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
                 SetServiceStatus(this.ServiceHandle, ref serviceStatus);
 
-                var s = bot.GetMeAsync().Result.FirstName;
+                var task = Task.Run(async () => await bot.GetMeAsync());
+                var s = task.Result.FirstName;
+
                 eventLogBot.WriteEntry("Запущен бот " + bot.GetMeAsync().Result.FirstName);
 
                 var cts = new CancellationTokenSource();
@@ -125,6 +128,11 @@ namespace StaffSearch
                     keyuser = "teluser:" + userid;
                     var userexist = cache.Contains(keyuser);
                     if (userexist) user = (telegram_user)cache.Get(keyuser);
+                    else
+                    {
+                        user = Methods.GetUser(userid.Value);
+                        cache.Add(keyuser, user, policyuser);
+                    }
 
                     eventLogBot.WriteEntry(Newtonsoft.Json.JsonConvert.SerializeObject(user));
                 }
@@ -460,7 +468,8 @@ namespace StaffSearch
                                 },
                             });
 
-                            await botClient.SendTextMessageAsync(message.Chat, res, null, Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: ikm);
+                            Message tm = await botClient.SendTextMessageAsync(message.Chat, res, null, Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: ikm);
+                            Methods.SaveMessageParameters(tm.Chat.Id, tm.MessageId, 0, 3);
                         }
                     }
                     else
@@ -488,6 +497,11 @@ namespace StaffSearch
                         string keyuser = "teluser:" + userid;
                         var userexist = cache.Contains(keyuser);
                         if (userexist) user = (telegram_user)cache.Get(keyuser);
+                        else
+                        {
+                            user = Methods.GetUser(userid.Value);
+                            cache.Add(keyuser, user, policyuser);
+                        }
                     }
 
                     if (message == "/nopreset")
@@ -552,6 +566,10 @@ namespace StaffSearch
                                 }
                                 else
                                 {
+                                    var mespar = Methods.GetMessageParameters(callbackquery.Message.Chat.Id);
+                                    await botClient.EditMessageReplyMarkupAsync(callbackquery.Message.Chat.Id, mespar.MessageId, replyMarkup: null);
+                                    Methods.DelMessageParameters(callbackquery.Message.Chat.Id);
+
                                     DateTime dreq = new DateTime(2000 + int.Parse(pars[3].Substring(4, 2)), int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
 
                                     var reqpost = "You request " + pars[5].Substring(0, 2) + " " + dreq.ToString("dMMM HH:mm", CultureInfo.CreateSpecificCulture("en-US")) + " posted. You have " + remreq.Cnt + " requests left. SubscribeTokens: " + remreq.Tokens.SubscribeTokens + ", NonSubscribeTokens: " + remreq.Tokens.NonSubscribeTokens + ", DebtSubscribeTokens: " + remreq.Tokens.DebtSubscribeTokens + ", DebtNonSubscribeTokens: " + remreq.Tokens.DebtNonSubscribeTokens;

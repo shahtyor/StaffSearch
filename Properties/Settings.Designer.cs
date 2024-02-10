@@ -193,8 +193,8 @@ namespace StaffSearch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Server = localhost; Port = 5432; User Id = postgres; Password = OVBtoBAX1972; Dat" +
-            "abase = sae")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database " +
+            "= sae")]
         public string ConnectionString {
             get {
                 return ((string)(this["ConnectionString"]));
@@ -213,6 +213,18 @@ namespace StaffSearch.Properties {
             }
             set {
                 this["UrlApi"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("6906986784:AAGWHhFXFQ3YVyu_c0fdJ1v13Pwsn5nbmBg")]
+        public string BotToken {
+            get {
+                return ((string)(this["BotToken"]));
+            }
+            set {
+                this["BotToken"] = value;
             }
         }
     }
