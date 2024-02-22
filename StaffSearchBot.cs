@@ -25,7 +25,7 @@ namespace StaffSearch
         //static ITelegramBotClient bot = new TelegramBotClient("6887022781:AAFHUUlU4japCWTaRli9BAx_aLM4d2vmFmU");
         static ITelegramBotClient bot = new TelegramBotClient(Properties.Settings.Default.BotToken);
         static ObjectCache cache = MemoryCache.Default;
-        static CacheItemPolicy policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10) };
+        static CacheItemPolicy policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMonths(Properties.Settings.Default.CacheUserNResult) };
 
         public enum ServiceState
         {
@@ -111,7 +111,7 @@ namespace StaffSearch
 
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
-            policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(10) };
+            policyuser = new CacheItemPolicy() { SlidingExpiration = TimeSpan.Zero, AbsoluteExpiration = DateTimeOffset.Now.AddMonths(Properties.Settings.Default.CacheUserNResult) };
 
             // Некоторые действия
             eventLogBot.WriteEntry(Newtonsoft.Json.JsonConvert.SerializeObject(update));
@@ -134,7 +134,11 @@ namespace StaffSearch
                         cache.Add(keyuser, user, policyuser);
                     }
 
-                    eventLogBot.WriteEntry(Newtonsoft.Json.JsonConvert.SerializeObject(user));
+                    try
+                    {
+                        eventLogBot.WriteEntry(Newtonsoft.Json.JsonConvert.SerializeObject(user));
+                    }
+                    catch { }
                 }
 
                 var msg = message?.Text?.Split(' ')[0];
@@ -195,6 +199,11 @@ namespace StaffSearch
                                 cache.Remove("User" + message.Chat.Id);
                             }
                         }
+                    }
+                    else if (message.Text == "/back")
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Later");
+                        cache.Remove("User" + message.Chat.Id);
                     }
                     else
                     {
@@ -316,7 +325,16 @@ namespace StaffSearch
                             searchdt = DateTime.Today;
                         }
 
-                        var DepNow = Methods.GetDepartureTime(From, DateTime.Now);
+                        DateTime DepNow = DateTime.Now;
+                        try
+                        {
+                            DepNow = Methods.GetDepartureTime(From, DateTime.Now);
+                        }
+                        catch
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, "Неизвестный пункт вылета!");
+                            return;
+                        }
 
                         eventLogBot.WriteEntry("DepNow: " + DepNow.ToString("dd-MM-yyyy HH:mm") + ", user=" + user?.id + ", token=" + user?.Token?.id_user);
 
@@ -356,6 +374,7 @@ namespace StaffSearch
                             eventLogBot.WriteEntry("permitted_ac: " + user?.permitted_ac);
 
                             ExtendedResult exres0 = await Methods.ExtendedSearch(From, To, searchdt, user.permitted_ac, false, GetNonDirectType.Off, pax, "USD", "EN", "RU", "bot" + message.Chat.Id, false, "3.0");
+                            SetTSOnResult(exres0);
                             user.exres = exres0;
 
                             eventLogBot.WriteEntry("DirectRes.Count: " + exres0.DirectRes?.Count + ", Uri=" + exres0.Alert);
@@ -418,6 +437,12 @@ namespace StaffSearch
                             if (n > cntf.Value) { n = cntf.Value; };
                             var Fl = user.exres.DirectRes[n - 1];
 
+                            var TimePassed = ((TimeSpan)(DateTime.Now - Fl.TS)).TotalMinutes;
+                            if (TimePassed > Properties.Settings.Default.OutdatedAfter)
+                            {
+                               FlightInfo FInfo = await Methods.GetFlightInfo(Fl.Origin, Fl.Destination, Fl.DepartureDateTime, 1, Fl.MarketingCarrier, Fl.FlightNumber);
+                            }
+
                             string srat = "";
                             if (Fl.Rating == RType.Red)
                             {
@@ -464,7 +489,7 @@ namespace StaffSearch
                             {
                                 new[]
                                 {
-                                    InlineKeyboardButton.WithCallbackData("Request", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber),
+                                    InlineKeyboardButton.WithCallbackData("Request", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.OperatingCarrier),
                                 },
                             });
 
@@ -531,7 +556,7 @@ namespace StaffSearch
                     if (message.Length >= 4 && message.Substring(0, 4) == "/com")
                     {
                         var pars = message.Split(' ');
-                        if (pars.Length == 6)
+                        if (pars.Length == 7)
                         {
                             bool RequestAvailable = true;
                             if (user == null || user.Token == null)
@@ -612,7 +637,22 @@ namespace StaffSearch
             string keyuser = "teluser:" + user.id;
             cache.Remove(keyuser);
             cache.Add(keyuser, user, policyuser);
-            eventLogBot.WriteEntry("UpdateUserInCache. keyuser=" + keyuser + ". " + Newtonsoft.Json.JsonConvert.SerializeObject(user));
+            try
+            {
+                eventLogBot.WriteEntry("UpdateUserInCache. keyuser=" + keyuser + ". " + Newtonsoft.Json.JsonConvert.SerializeObject(user));
+            }
+            catch { }
+        }
+
+        private static void SetTSOnResult(ExtendedResult exres)
+        {
+            if (exres.DirectRes != null)
+            {
+                foreach (var F in exres.DirectRes)
+                {
+                    F.TS = DateTime.Now;
+                }
+            }
         }
 
         private static string GetTimeAsHM2(int minutes)

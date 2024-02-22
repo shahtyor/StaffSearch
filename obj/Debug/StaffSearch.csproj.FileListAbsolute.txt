@@ -43,9 +43,9 @@ F:\StaffSearch\obj\Debug\StaffSearch.csproj.AssemblyReference.cache
 F:\StaffSearch\obj\Debug\StaffSearch.StaffSearchBot.resources
 F:\StaffSearch\obj\Debug\StaffSearch.csproj.GenerateResource.cache
 F:\StaffSearch\obj\Debug\StaffSearch.csproj.CoreCompileInputs.cache
-F:\StaffSearch\obj\Debug\StaffSearch.csproj.CopyComplete
 F:\StaffSearch\obj\Debug\StaffSearch.exe
 F:\StaffSearch\obj\Debug\StaffSearch.pdb
 F:\StaffSearch\obj\Debug\StaffSearch.ProjectInstaller.resources
 F:\StaffSearch\bin\Debug\SAE.dll
 F:\StaffSearch\bin\Debug\SAE.pdb
+F:\StaffSearch\obj\Debug\StaffSea.79C8BC8A.Up2Date

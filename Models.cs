@@ -153,6 +153,13 @@ namespace StaffSearch
         /// Точность прогноза
         /// </summary>
         public string Accuracy { get; set; }
+        public DateTime? TS { get; set; }
+    }
+
+    public class FlightInfo
+    {
+        public Flight Flight { get; set; }
+        public string Alert { get; set; }
     }
 
     public class AviasalesInfo
@@ -230,5 +237,11 @@ namespace StaffSearch
     {
         public long ChatId { get; set; }
         public int MessageId { get; set; }
+    }
+
+    public class ReporterGroup
+    {
+        public List<long> Main { get; set; }
+        public List<long> Control { get; set; }
     }
 }

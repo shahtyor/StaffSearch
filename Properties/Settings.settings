@@ -53,5 +53,14 @@
     <Setting Name="BotToken" Type="System.String" Scope="User">
       <Value Profile="(Default)">6906986784:AAGWHhFXFQ3YVyu_c0fdJ1v13Pwsn5nbmBg</Value>
     </Setting>
+    <Setting Name="AgentControl" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CacheUserNResult" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="OutdatedAfter" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
