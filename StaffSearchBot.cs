@@ -151,9 +151,9 @@ namespace StaffSearch
                 if (message?.Text?.ToLower() == "/start")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Инструкция, как пользоваться ботом");
-                    await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+                    //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
 
-                    cache.Add("User" + userid.Value, "entertoken", policyuser);
+                    //cache.Add("User" + userid.Value, "entertoken", policyuser);
 
                     return;
                 }
@@ -375,6 +375,7 @@ namespace StaffSearch
 
                             ExtendedResult exres0 = await Methods.ExtendedSearch(From, To, searchdt, user.permitted_ac, false, GetNonDirectType.Off, pax, "USD", "EN", "RU", "bot" + message.Chat.Id, false, "3.0");
                             SetTSOnResult(exres0);
+                            user.SearchParameters = new SearchParam() { Origin = From, Destination = To, Date = searchdt, Pax = pax };
                             user.exres = exres0;
 
                             eventLogBot.WriteEntry("DirectRes.Count: " + exres0.DirectRes?.Count + ", Uri=" + exres0.Alert);
@@ -440,7 +441,14 @@ namespace StaffSearch
                             var TimePassed = ((TimeSpan)(DateTime.Now - Fl.TS)).TotalMinutes;
                             if (TimePassed > Properties.Settings.Default.OutdatedAfter)
                             {
-                               FlightInfo FInfo = await Methods.GetFlightInfo(Fl.Origin, Fl.Destination, Fl.DepartureDateTime, 1, Fl.MarketingCarrier, Fl.FlightNumber);
+                                int px = 1;
+                                if (user.SearchParameters != null)
+                                {
+                                    px = user.SearchParameters.Pax;
+                                }
+                                FlightInfo FInfo = await Methods.GetFlightInfo(Fl.Origin, Fl.Destination, Fl.DepartureDateTime, px, Fl.MarketingCarrier, Fl.FlightNumber);
+                                Fl = FInfo.Flight;
+                                Fl.TS = DateTime.Now;
                             }
 
                             string srat = "";
@@ -475,7 +483,7 @@ namespace StaffSearch
                                 ForecastStatus = "Good";
                             }
 
-                            string res = Fl.MarketingName + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.EquipmentName + Environment.NewLine + Environment.NewLine +
+                            string res = Fl.MarketingName + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.EquipmentName + " -" + Fl.TS + "-" + Environment.NewLine + Environment.NewLine +
                                 Fl.DepartureDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.DepartureDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.DepartureCityName) ? Fl.DepartureCityName + ", " : "") + Fl.DepartureName + " (" + Fl.Origin + ")" + (!string.IsNullOrEmpty(Fl.DepartureTerminal) ? ", Terminal " + Fl.DepartureTerminal : "") + Environment.NewLine +
                                 "In flight " + GetTimeAsHM2(Fl.Duration) + Environment.NewLine +
                                 Fl.ArrivalDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.ArrivalDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.ArrivalCityName) ? Fl.ArrivalCityName + ", " : "") + Fl.ArrivalName + " (" + Fl.Destination + ")" + (!string.IsNullOrEmpty(Fl.ArrivalTerminal) ? ", Terminal " + Fl.ArrivalTerminal : "") + Environment.NewLine + Environment.NewLine +

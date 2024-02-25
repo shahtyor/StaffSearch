@@ -1531,3 +1531,37 @@ System.Security.SecurityException: Источник не найден, но не
    logtoconsole = 
    assemblypath = F:\StaffSearch\bin\Debug\StaffSearch.exe
    logfile = F:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется установка сборки 'D:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = D:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = D:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'D:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = D:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = D:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление сборки 'D:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = D:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = D:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Выполняется удаление источника EventLog StaffSearchBot.
+Выполняется удаление службы StaffSearchBot из системы...
+Служба StaffSearchBot успешно удалена из системы.
+Выполняется установка сборки 'D:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = D:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = D:\StaffSearch\bin\Debug\StaffSearch.InstallLog
+Устанавливается служба StaffSearchBot...
+Служба StaffSearchBot успешно установлена.
+Создается исходный EventLog StaffSearchBot в журнале Application...
+Выполняется фиксация сборки 'D:\StaffSearch\bin\Debug\StaffSearch.exe'.
+Затронуты следующие параметры:
+   logtoconsole = 
+   assemblypath = D:\StaffSearch\bin\Debug\StaffSearch.exe
+   logfile = D:\StaffSearch\bin\Debug\StaffSearch.InstallLog

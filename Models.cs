@@ -11,8 +11,17 @@ namespace StaffSearch
         public bool is_reporter { get; set; }
         public bool is_requestor { get; set; }
         public string permitted_ac { get; set; }
+        public SearchParam SearchParameters { get; set; }
         public ExtendedResult exres { get; set; }
         public sign_in Token { get; set; }
+    }
+
+    public class SearchParam
+    {
+        public string Origin { get; set; }
+        public string Destination { get; set; }
+        public DateTime Date { get; set; }
+        public int Pax { get; set; }
     }
 
     public class sign_in
