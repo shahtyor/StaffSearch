@@ -152,17 +152,21 @@ namespace StaffSearch
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Инструкция, как пользоваться ботом");
 
-                    /*if (user.Token == null)
+                    if (user.Token == null)
                     {
                         await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
 
                         cache.Add("User" + userid.Value, "entertoken", policyuser);
-                    }*/
-                    if (user.own_ac == "??")
+                    }
+                    else if (user.own_ac == "??")
                     {
                         await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code:");
 
                         cache.Add("User" + userid.Value, "preset", policyuser);
+                    }
+                    else
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "You can do a search!");
                     }
 
                     //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
@@ -216,7 +220,7 @@ namespace StaffSearch
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All Airlines permitted" : user.permitted_ac));
+                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All Airlines permitted" : user.permitted_ac) + Environment.NewLine + "You can do a search!");
                             }
                         }
                         else
@@ -279,7 +283,7 @@ namespace StaffSearch
 
                         cache.Remove("User" + message.Chat.Id);
 
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac.ToUpper() + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(sperm) ? "All Airlines permitted" : sperm));
+                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac.ToUpper() + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(sperm) ? "All Airlines permitted" : sperm) + Environment.NewLine + "You can do a search!");
                     }
                     else
                     {
