@@ -151,6 +151,20 @@ namespace StaffSearch
                 if (message?.Text?.ToLower() == "/start")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Инструкция, как пользоваться ботом");
+
+                    /*if (user.Token == null)
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+
+                        cache.Add("User" + userid.Value, "entertoken", policyuser);
+                    }*/
+                    if (user.own_ac == "??")
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code:");
+
+                        cache.Add("User" + userid.Value, "preset", policyuser);
+                    }
+
                     //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
 
                     //cache.Add("User" + userid.Value, "entertoken", policyuser);
@@ -162,6 +176,14 @@ namespace StaffSearch
                     await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
 
                     cache.Add("User" + userid.Value, "entertoken", policyuser);
+
+                    return;
+                }
+                else if (message?.Text?.ToLower() == "/preset")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code:");
+
+                    cache.Add("User" + userid.Value, "preset", policyuser);
 
                     return;
                 }
@@ -178,14 +200,24 @@ namespace StaffSearch
                     if (isGuid0)
                     {
                         string alert = null;
-                        user = Methods.ProfileCommand(userid.Value, message.Text, eventLogBot, user, out alert);
+                        user = Methods.ProfileCommand(userid.Value, message.Text, eventLogBot, out alert);
 
                         if (string.IsNullOrEmpty(alert))
                         {
                             UpdateUserInCache(user);
                             //cache.Add(keyuser, user, policyuser);
                             cache.Remove("User" + message.Chat.Id);
-                            await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All Airlines permitted" : user.permitted_ac), replyMarkup: GetIkmPresetNopreset(user.own_ac));
+
+                            if (user.own_ac == "??")
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code:");
+
+                                cache.Add("User" + userid.Value, "preset", policyuser);
+                            }
+                            else
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All Airlines permitted" : user.permitted_ac));
+                            }
                         }
                         else
                         {
@@ -221,7 +253,7 @@ namespace StaffSearch
                     return;
                 }
 
-                if (comm == "preset" && message.Text.Length == 2)
+                if (comm == "preset")
                 {
                     //string[] presetstr = message.Text.Split(' ');
                     //if (presetstr.Length > 1)
@@ -237,17 +269,17 @@ namespace StaffSearch
                         user.permitted_ac = sperm;
                         UpdateUserInCache(user);
 
-                        var ikm = new InlineKeyboardMarkup(new[]
+                        /*var ikm = new InlineKeyboardMarkup(new[]
                         {
                             new[]
                             {
                                 InlineKeyboardButton.WithCallbackData("Nopreset", "/nopreset"),
                             },
-                        });
+                        });*/
 
                         cache.Remove("User" + message.Chat.Id);
 
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac.ToUpper() + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(sperm) ? "All Airlines permitted" : sperm), replyMarkup: ikm);
+                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac.ToUpper() + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(sperm) ? "All Airlines permitted" : sperm));
                     }
                     else
                     {

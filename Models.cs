@@ -225,6 +225,7 @@ namespace StaffSearch
         public bool Premium { get; set; }
         public string Error { get; set; }
         public string Timing { get; set; }
+        public string OwnAC { get; set; }
     }
 
     public class TokenCollection
