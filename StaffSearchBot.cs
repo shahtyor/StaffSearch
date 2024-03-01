@@ -16,6 +16,7 @@ using System.Timers;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
 namespace StaffSearch
@@ -650,6 +651,37 @@ namespace StaffSearch
                 }
 
                 return;
+            }
+            else if (update.Type == UpdateType.MyChatMember)
+            {
+                var myChatMember = update.MyChatMember;
+
+                //var message = update.Message;
+                long? userid = null;
+                telegram_user user = null;
+
+                if (myChatMember.From != null)
+                {
+                    userid = myChatMember.From.Id;
+                    string keyuser = "teluser:" + userid;
+                    var userexist = cache.Contains(keyuser);
+                    if (userexist) user = (telegram_user)cache.Get(keyuser);
+                    else
+                    {
+                        user = Methods.GetUser(userid.Value);
+                        cache.Add(keyuser, user, policyuser);
+                    }
+                }
+
+                var CM = myChatMember.NewChatMember;
+                if (CM.Status == ChatMemberStatus.Kicked) // Заблокировал чат
+                {
+                    Methods.UserBlockChat(userid.Value, AirlineAction.Delete);
+                }
+                else if (CM.Status == ChatMemberStatus.Member) // Разблокировал чат
+                {
+                    Methods.UserBlockChat(userid.Value, AirlineAction.Add);
+                }
             }
         }
 

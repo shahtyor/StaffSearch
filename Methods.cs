@@ -181,6 +181,15 @@ namespace StaffSearch
             return result;
         }
 
+        public static void UserBlockChat(long id, AirlineAction action)
+        {
+            NpgsqlCommand com = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor where id=@id", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = action == AirlineAction.Add });
+            com.ExecuteNonQuery();
+            com.Dispose();
+        }
+
         public static sign_in GetToken(string token)
         {
             sign_in result = null;
@@ -637,7 +646,7 @@ namespace StaffSearch
                 {
                     iid = long.Parse(sid);
                 }
-                user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString() };
+                user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = true };
                 var id_user = reader["id_user"].ToString();
                 var arr_id_user = id_user.Split('_');
                 if (!string.IsNullOrEmpty(id_user))
