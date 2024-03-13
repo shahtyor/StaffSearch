@@ -634,6 +634,10 @@ namespace StaffSearch
                                 {
                                     await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have made the maximum number of requests!");
                                 }
+                                else if (remreq.Cnt == -2)
+                                {
+                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have already made a request for this flight!");
+                                }
                                 else
                                 {
                                     var mespar = Methods.GetMessageParameters(callbackquery.Message.Chat.Id);
