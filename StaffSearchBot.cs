@@ -311,14 +311,15 @@ namespace StaffSearch
                     var dt = comsplit[0].Substring(6);
                     var islash = command.IndexOf('/');
                     var pax = 1;
+                    bool paxint = true;
                     if (comsplit.Length > 1)
                     {
-                        pax = Convert.ToInt32(comsplit[1]);
+                        paxint = int.TryParse(comsplit[1], out pax);
                     }
 
                     eventLogBot.WriteEntry("From: " + From + ", To: " + To + ", dt: " + dt + ", pax: " + pax);
 
-                    if (dt.Length <= 4)
+                    if (dt.Length <= 4 && paxint)
                     {
                         DateTime searchdt = DateTime.Today;
                         if (dt.Length == 4)

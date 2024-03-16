@@ -676,6 +676,14 @@ namespace StaffSearch
                 {
                     user.Token = new sign_in() { type = short.Parse(arr_id_user[0]), id_user = arr_id_user[1] };
                 }
+                if (!user.is_requestor)
+                {
+                    NpgsqlCommand com2 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor where id=@id");
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
+                    com2.ExecuteNonQuery();
+                    com2.Dispose();
+                }
             }
             else
             {
