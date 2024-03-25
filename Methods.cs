@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using RestSharp;
 using SAE;
 using SAE.AmadeusPRD;
 using System;
@@ -226,20 +227,72 @@ namespace StaffSearch
             else return false;
         }
 
-        public static void UpdateUserAC(long id, string ac)
+        public static void UpdateUserAC(long id, string ac, string current_ac)
         {
             NpgsqlCommand com = new NpgsqlCommand("update telegram_user set own_ac=@own_ac where id=@id", conn);
             com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
             com.Parameters.Add(new NpgsqlParameter() { ParameterName = "own_ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Char, Value = ac });
-            try
-            {
-                com.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                string s = "123";
-            }
+            com.ExecuteNonQuery();
             com.Dispose();
+
+            UpdateAirlinesReporter(current_ac, AirlineAction.Delete);
+            UpdateAirlinesReporter(ac, AirlineAction.Add);
+        }
+
+        public static void UpdateAirlinesReporter(string ac, AirlineAction action)
+        {
+            if (!string.IsNullOrEmpty(ac) && ac.Length == 2)
+            {
+                NpgsqlCommand com = new NpgsqlCommand("select count(*) from telegram_user where is_reporter=true and own_ac=@ac", conn);
+                com.Parameters.Add(new NpgsqlParameter() { ParameterName = "ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Char, Value = ac });
+                var cnt = Convert.ToInt32(com.ExecuteScalar());
+                com.Dispose();
+
+                if (action == AirlineAction.Delete)
+                {
+                    if (cnt == 0)
+                    {
+                        com = new NpgsqlCommand("update airlines set reporter=false where code=@ac", conn);
+                        com.Parameters.Add(new NpgsqlParameter() { ParameterName = "ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = ac });
+                        com.ExecuteNonQuery();
+                        com.Dispose();
+
+                        // отправляем событие «change reporters for ac» в амплитуд
+                        string DataJson2 = "[{\"event_type\":\"change reporters for ac\"," +
+                            "\"event_properties\":{\"ac\":\"" + ac + "\"," +
+                            "\"new_status\":\"false\"}}]";
+                        var task2 = Task.Run(async () => await AmplitudePOST(DataJson2));
+                    }
+                }
+                else
+                {
+                    if (cnt > 0)
+                    {
+                        com = new NpgsqlCommand("update airlines set reporter=true where code=@ac", conn);
+                        com.Parameters.Add(new NpgsqlParameter() { ParameterName = "ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = ac });
+                        com.ExecuteNonQuery();
+                        com.Dispose();
+
+                        // отправляем событие «change reporters for ac» в амплитуд
+                        string DataJson = "[{\"event_type\":\"change reporters for ac\"," +
+                            "\"event_properties\":{\"ac\":\"" + ac + "\"," +
+                            "\"new_status\":\"true\"}}]";
+                        var task = Task.Run(async () => await AmplitudePOST(DataJson));
+                    }
+                }
+            }
+        }
+
+        public static async Task<string> AmplitudePOST(string Data)
+        {
+            string result = null;
+            var client = new RestClient("https://api.amplitude.com/httpapi");
+            var request = new RestRequest((string)null, Method.Post);
+            request.AddHeader("content-type", "application/x-www-form-urlencoded");
+            request.AddParameter("api_key", "95be547554caecf51c57c691bafb2640");
+            request.AddParameter("event", Data);
+            await client.ExecuteAsync(request).ContinueWith(t => { result = t.Result.Content; });
+            return result;
         }
 
         public static int TestAC(string ac)
@@ -270,49 +323,67 @@ namespace StaffSearch
 
         public static AddRequestResponse AddRequest(CallbackQuery query, string id_user)
         {
-            NpgsqlCommand com0 = new NpgsqlCommand("select count(*) from telegram_request where id_requestor=@id_requestor and ts_create > now()-INTERVAL '1 month'", conn);
-            com0.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
-            var obj = (long)com0.ExecuteScalar();
-            var cntreq = Convert.ToInt32(obj);
-            com0.Dispose();
-
-            if (cntreq < 10)
+            var pars = query.Data.Split(' ');
+            if (pars.Length == 7)
             {
-                var pars = query.Data.Split(' ');
-                if (pars.Length == 7)
+                NpgsqlCommand com01 = new NpgsqlCommand("select * from telegram_request where id_requestor=@id_requestor and request_status in (0, 1, 2, 3, 4) and origin=@origin and destination=@destination and date_flight=@date_flight and time_flight=@time_flight and operating=@operating and number_flight=@number_flight", conn);
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "time_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[4] });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "operating", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[6] });
+                com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "number_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[5] });
+
+                NpgsqlDataReader reader = com01.ExecuteReader();
+                var ExistReq = reader.HasRows;
+                reader.Close();
+                reader.Dispose();
+                com01.Dispose();
+
+                if (!ExistReq)
                 {
-                    NpgsqlCommand com01 = new NpgsqlCommand("select * from telegram_request where id_requestor=@id_requestor and request_status in (0, 1, 2, 3, 4) and origin=@origin and destination=@destination and date_flight=@date_flight and time_flight=@time_flight and operating=@operating and number_flight=@number_flight", conn);
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "time_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[4] });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "operating", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[6] });
-                    com01.Parameters.Add(new NpgsqlParameter() { ParameterName = "number_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[5] });
+                    var Coll = DebtToken(id_user).Result;
 
-                    NpgsqlDataReader reader = com01.ExecuteReader();
-                    var ExistReq = reader.HasRows;
-                    reader.Close();
-                    reader.Dispose();
-                    com01.Dispose();
+                    string desc = "";
+                    var descexist = cache.Contains("key:" + pars[5]);
+                    if (descexist) desc = (string)cache.Get("key:" + pars[5]);
 
-                    if (!ExistReq)
+                    DateTime DepartureDateTime = new DateTime(int.Parse(pars[3].Substring(4, 2)) + 2000, int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
+
+                    var msk_time = GetDepartureTimeMsk(pars[1], DepartureDateTime);
+
+                    //var reps = GetReporters(pars[5].Substring(0, 2));
+                    //var repgroup = GetReporterGroup(reps);
+                    var group_id = GetMaxIdGroup();
+
+                    NpgsqlCommand com = new NpgsqlCommand("insert into telegram_request (id_group, version_request, id_requestor, origin, destination, date_flight, time_flight, operating, number_flight, desc_flight, departure_dt_msk, subscribe_tokens, paid_tokens) values (@id_group, 0, @id_requestor, @origin, @destination, @date_flight, @time_flight, @operating, @number_flight, @desc_flight, @departure_dt_msk, @subscribe_tokens, @paid_tokens)", conn);
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_group", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = group_id });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "time_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[4] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "operating", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[6] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "number_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[5] });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "desc_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = desc });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "departure_dt_msk", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Timestamp, Value = msk_time });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "subscribe_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtSubscribeTokens });
+                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "paid_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtNonSubscribeTokens });
+
+                    try
                     {
-                        var Coll = DebtToken(id_user).Result;
+                        com.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        var e = ex.StackTrace;
+                    }
+                    com.Dispose();
 
-                        string desc = "";
-                        var descexist = cache.Contains("key:" + pars[5]);
-                        if (descexist) desc = (string)cache.Get("key:" + pars[5]);
-
-                        DateTime DepartureDateTime = new DateTime(int.Parse(pars[3].Substring(4, 2)) + 2000, int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
-
-                        var msk_time = GetDepartureTimeMsk(pars[1], DepartureDateTime);
-
-                        //var reps = GetReporters(pars[5].Substring(0, 2));
-                        //var repgroup = GetReporterGroup(reps);
-                        var group_id = GetMaxIdGroup();
-
-                        NpgsqlCommand com = new NpgsqlCommand("insert into telegram_request (id_group, version_request, id_requestor, origin, destination, date_flight, time_flight, operating, number_flight, desc_flight, departure_dt_msk, subscribe_tokens, paid_tokens) values (@id_group, 0, @id_requestor, @origin, @destination, @date_flight, @time_flight, @operating, @number_flight, @desc_flight, @departure_dt_msk, @subscribe_tokens, @paid_tokens)", conn);
+                    if (Properties.Settings.Default.AgentControl)
+                    {
+                        com = new NpgsqlCommand("insert into telegram_request (id_group, version_request, id_requestor, origin, destination, date_flight, time_flight, operating, number_flight, desc_flight, departure_dt_msk, subscribe_tokens, paid_tokens) values (@id_group, 1, @id_requestor, @origin, @destination, @date_flight, @time_flight, @operating, @number_flight, @desc_flight, @departure_dt_msk, @subscribe_tokens, @paid_tokens)", conn);
                         com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_group", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = group_id });
                         com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
                         com.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
@@ -335,48 +406,17 @@ namespace StaffSearch
                             var e = ex.StackTrace;
                         }
                         com.Dispose();
-
-                        if (Properties.Settings.Default.AgentControl)
-                        {
-                            com = new NpgsqlCommand("insert into telegram_request (id_group, version_request, id_requestor, origin, destination, date_flight, time_flight, operating, number_flight, desc_flight, departure_dt_msk, subscribe_tokens, paid_tokens) values (@id_group, 1, @id_requestor, @origin, @destination, @date_flight, @time_flight, @operating, @number_flight, @desc_flight, @departure_dt_msk, @subscribe_tokens, @paid_tokens)", conn);
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_group", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = group_id });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = id_user });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "origin", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[1] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "destination", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[2] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "date_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[3] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "time_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[4] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "operating", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[6] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "number_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = pars[5] });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "desc_flight", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = desc });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "departure_dt_msk", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Timestamp, Value = msk_time });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "subscribe_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtSubscribeTokens });
-                            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "paid_tokens", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer, Value = Coll.DebtNonSubscribeTokens });
-
-                            try
-                            {
-                                com.ExecuteNonQuery();
-                            }
-                            catch (Exception ex)
-                            {
-                                var e = ex.StackTrace;
-                            }
-                            com.Dispose();
-                        }
-
-                        return new AddRequestResponse() { Cnt = 9 - cntreq, Tokens = Coll };
-                    }
-                    else
-                    {
-                        return new AddRequestResponse() { Cnt = -2 };
                     }
 
+                    return new AddRequestResponse() { Cnt = 10, Tokens = Coll };
                 }
-                return new AddRequestResponse();
+                else
+                {
+                    return new AddRequestResponse() { Cnt = -2 };
+                }
+
             }
-            else
-            {
-                return new AddRequestResponse() { Cnt = -1 };
-            }
+            return new AddRequestResponse();
         }
 
         // настройка клиента
@@ -396,13 +436,13 @@ namespace StaffSearch
             return client;
         }
 
-        public static async Task<ExtendedResult> ExtendedSearch(string origin, string destination, DateTime date, string list, bool GetTransfer, GetNonDirectType ntype, int pax, string currency, string lang, string country, string token = "void token", bool sa = true, string ver = "1.0", string ac = "--")
+        public static async Task<ExtendedResult> ExtendedSearch(string origin, string destination, DateTime date, string list, bool GetTransfer, GetNonDirectType ntype, int pax, string currency, string lang, string country, string token = "void token", bool sa = true, string ver = "1.0", string ac = "--", string id_user = "")
         {
             try
             {
                 using (HttpClient client = GetClient())
                 {
-                    string Uri = Properties.Settings.Default.UrlApi + "/amadeus/ExtendedSearch?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd") + "&list=" + list + "&GetTransfer=" + GetTransfer.ToString() + "&GetNonDirect=" + ntype.ToString() + "&pax=" + pax + "&token=" + token + "&sa=" + sa.ToString() + "&ver=" + ver + "&ac=" + ac + "&currency=" + currency + "&lang=" + lang + "&country=" + country;
+                    string Uri = Properties.Settings.Default.UrlApi + "/amadeus/ExtendedSearch?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd") + "&list=" + list + "&GetTransfer=" + GetTransfer.ToString() + "&GetNonDirect=" + ntype.ToString() + "&pax=" + pax + "&token=" + token + "&sa=" + sa.ToString() + "&ver=" + ver + "&ac=" + ac + "&currency=" + currency + "&lang=" + lang + "&country=" + country + "&id_user=" + id_user;
                     var response = await client.GetAsync(Uri);
                     if (response.IsSuccessStatusCode)
                     {
@@ -516,6 +556,12 @@ namespace StaffSearch
         {
             var result = dt.AddMinutes(GetTimeOffset(iata));
             return result;
+        }
+
+        public static string CorrectTimePassed(int minutes)
+        {
+            var ts = TimeSpan.FromMinutes(minutes);
+            return ts.Days + "d " + ts.Hours + "h " + ts.Minutes + "m";
         }
 
         public static DateTime GetDepartureTimeMsk(string iata, DateTime dt)
@@ -669,7 +715,7 @@ namespace StaffSearch
                 {
                     iid = long.Parse(sid);
                 }
-                user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = true };
+                user = new telegram_user() { id = iid, first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = (bool)reader["is_requestor"] };
                 var id_user = reader["id_user"].ToString();
                 var arr_id_user = id_user.Split('_');
                 if (!string.IsNullOrEmpty(id_user))
@@ -678,11 +724,16 @@ namespace StaffSearch
                 }
                 if (!user.is_requestor)
                 {
-                    NpgsqlCommand com2 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor where id=@id");
-                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
-                    com.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
-                    com2.ExecuteNonQuery();
-                    com2.Dispose();
+                    using (NpgsqlConnection connect = new NpgsqlConnection(Properties.Settings.Default.ConnectionString))
+                    {
+                        connect.Open();
+                        NpgsqlCommand com2 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor where id=@id", connect);
+                        com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
+                        com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
+                        com2.ExecuteNonQuery();
+                        com2.Dispose();
+                        connect.Close();
+                    }
                 }
             }
             else

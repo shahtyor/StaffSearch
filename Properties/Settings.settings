@@ -48,7 +48,7 @@
       <Value Profile="(Default)">Server = localhost; Port = 5432; User Id = postgres; Password = e4r5t6; Database = sae</Value>
     </Setting>
     <Setting Name="UrlApi" Type="System.String" Scope="User">
-      <Value Profile="(Default)">http://dev-api.staffairlines.com:8033/api</Value>
+      <Value Profile="(Default)">http://192.168.0.106:8880//api</Value>
     </Setting>
     <Setting Name="BotToken" Type="System.String" Scope="User">
       <Value Profile="(Default)">6906986784:AAGWHhFXFQ3YVyu_c0fdJ1v13Pwsn5nbmBg</Value>
@@ -61,6 +61,9 @@
     </Setting>
     <Setting Name="OutdatedAfter" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="AgentTimePassed" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">60</Value>
     </Setting>
   </Settings>
 </SettingsFile>

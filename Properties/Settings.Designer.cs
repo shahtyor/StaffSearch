@@ -206,7 +206,7 @@ namespace StaffSearch.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://dev-api.staffairlines.com:8033/api")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://192.168.0.106:8880//api")]
         public string UrlApi {
             get {
                 return ((string)(this["UrlApi"]));
@@ -261,6 +261,18 @@ namespace StaffSearch.Properties {
             }
             set {
                 this["OutdatedAfter"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60")]
+        public int AgentTimePassed {
+            get {
+                return ((int)(this["AgentTimePassed"]));
+            }
+            set {
+                this["AgentTimePassed"] = value;
             }
         }
     }

@@ -168,6 +168,9 @@ namespace StaffSearch
         /// Точность прогноза
         /// </summary>
         public string Accuracy { get; set; }
+
+        public PlaceInfo AgentInfo { get; set; }
+
         public DateTime? TS { get; set; }
     }
 
@@ -243,6 +246,17 @@ namespace StaffSearch
         public string Error { get; set; }
     }
 
+    public class PlaceInfo
+    {
+        public int? EconomyPlaces { get; set; }
+        public int? BusinessPlaces { get; set; }
+        public int? CntSAPassenger { get; set; }
+        public DateTime ts { get; set; }
+        public int TimePassed { get; set; }
+        public string Nickname { get; set; }
+        public string Id_user { get; set; }
+    }
+
     public class AddRequestResponse
     {
         public int Cnt { get; set; }
@@ -259,5 +273,29 @@ namespace StaffSearch
     {
         public List<long> Main { get; set; }
         public List<long> Control { get; set; }
+    }
+
+    public class Request
+    {
+        public long Id { get; set; }
+        public long Id_group { get; set; }
+        public short Version_request { get; set; }
+        public string Id_requestor { get; set; }
+        public string Id_reporter { get; set; }
+        public short Request_status { get; set; }
+        public string Origin { get; set; }
+        public string Destination { get; set; }
+        public DateTime DepartureDateTime { get; set; }
+        public string Operating { get; set; }
+        public string Number_flight { get; set; }
+        public string Desc_fligth { get; set; }
+        public int? Economy_count { get; set; }
+        public int? Business_count { get; set; }
+        public int? SA_count { get; set; }
+        public short Source { get; set; }
+        public string Push_id { get; set; }
+        public int SubscribeTokens { get; set; }
+        public int PaidTokens { get; set; }
+        public short Pax { get; set; }
     }
 }
