@@ -357,7 +357,7 @@ namespace StaffSearch
                             }
                             catch { }
 
-                            if (searchdt < DateTime.Today)
+                            if (searchdt < DepNow.Date)
                             {
                                 searchdt = searchdt.AddMonths(1);
                             }
@@ -369,6 +369,11 @@ namespace StaffSearch
                                 searchdt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, Convert.ToInt32(dt));
                             }
                             catch { }
+
+                            if (searchdt < DepNow.Date)
+                            {
+                                searchdt = searchdt.AddMonths(1);
+                            }
                         }
                         else if (dt.Length == 0)
                         {
