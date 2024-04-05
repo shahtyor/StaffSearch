@@ -2,16 +2,18 @@
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using RestSharp;
-using SAE;
-using SAE.AmadeusPRD;
+//using SAE;
+//using SAE.AmadeusPRD;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Caching;
+using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Threading.Tasks;
@@ -343,7 +345,7 @@ namespace StaffSearch
 
                 if (!ExistReq)
                 {
-                    var Coll = DebtToken(id_user).Result;
+                    var Coll = DebtToken(id_user, "oper", "request").Result;
 
                     string desc = "";
                     var descexist = cache.Contains("key:" + pars[5]);
@@ -506,13 +508,13 @@ namespace StaffSearch
             return new ProfileTokens();
         }
 
-        public static async Task<TokenCollection> DebtToken(string id_user)
+        public static async Task<TokenCollection> DebtToken(string id_user, string type, string operation)
         {
             try
             {
                 using (HttpClient client = GetClient())
                 {
-                    string Uri = Properties.Settings.Default.UrlApi + "/token/DebtToken?id_user=" + id_user + "&type=oper&operation=request&amount=0";
+                    string Uri = Properties.Settings.Default.UrlApi + "/token/DebtToken?id_user=" + id_user + "&type=" + type + "&operation=" + operation + "&amount=0";
                     var response = await client.GetAsync(Uri);
                     if (response.IsSuccessStatusCode)
                     {
@@ -523,6 +525,29 @@ namespace StaffSearch
                 }
             }
             catch (Exception ex) 
+            {
+                return new TokenCollection() { Error = ex.Message + "..." + ex.StackTrace };
+            }
+            return new TokenCollection();
+        }
+
+        public static async Task<TokenCollection> CredToken(string id_user, string type, string operation, int amount)
+        {
+            try
+            {
+                using (HttpClient client = GetClient())
+                {
+                    string Uri = Properties.Settings.Default.UrlApi + "/token/CredToken?id_user=" + id_user + "&type=" + type + "&operation=" + operation + "&amount=";
+                    var response = await client.GetAsync(Uri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        TokenCollection result = JsonConvert.DeserializeObject<TokenCollection>(json);
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex)
             {
                 return new TokenCollection() { Error = ex.Message + "..." + ex.StackTrace };
             }
@@ -598,32 +623,19 @@ namespace StaffSearch
 
         private static DateTime GetAmadCurrentTime(string iata)
         {
-            string AmadeusName = Properties.Settings.Default.AmadeusName;
-            string AmadeusPass = Properties.Settings.Default.AmadeusPass;
-            string AmadeusPCI = Properties.Settings.Default.AmadeusPCI;
-            string AlexAmadeusName = Properties.Settings.Default.AlexAmadeusName;
-            string AlexAmadeusPass = Properties.Settings.Default.AlexAmadeusPass;
-            string AlexAmadeusPCI = Properties.Settings.Default.AlexAmadeusPCI;
-            string AmplitudeUserID = Properties.Settings.Default.AmplitudeUserID;
-            bool UseProxy = Properties.Settings.Default.UseProxy;
-            string UrlProxy = Properties.Settings.Default.UrlProxy;
-            string LogProxy = Properties.Settings.Default.LogProxy;
-            string ParProxy = Properties.Settings.Default.ParProxy;
-
-
-            Amadeus Amad = new Amadeus(AmadeusName, AmadeusPass, AmadeusPCI, "c:\\xmlcrypt", "95be547554caecf51c57c691bafb2640", AmplitudeUserID, false, UseProxy, UrlProxy, LogProxy, ParProxy);
-            Amadeus Amad2 = new Amadeus(AlexAmadeusName, AlexAmadeusPass, AlexAmadeusPCI, "c:\\xmlcrypt", "95be547554caecf51c57c691bafb2640", AmplitudeUserID, false, false, null, null, null);
-
-            var gto = Properties.Settings.Default.gate_time_offset;
-            DateTime result = new DateTime();
-            if (gto == "MOWR228SG")
+            DateTime result = DateTime.MinValue;
+            using (HttpClient client = GetClient())
             {
-                result = Amad2.GetDateTimeInAirport(iata);
+                string Uri = Properties.Settings.Default.UrlApi + "/amadeus/GetCurrentTimeIATA?iata=" + iata;
+                var response = Task.Run(async () => await client.GetAsync(Uri)).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = Task.Run(async () => await response.Content.ReadAsStringAsync()).Result;
+                    CurrentTime res = JsonConvert.DeserializeObject<CurrentTime>(json);
+                    result = res.Time;
+                }
             }
-            else
-            {
-                result = Amad.GetDateTimeInAirport(iata);
-            }
+
             return result;
         }
 

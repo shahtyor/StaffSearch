@@ -257,6 +257,12 @@ namespace StaffSearch
         public string Id_user { get; set; }
     }
 
+    public class CurrentTime
+    {
+        public DateTime Time { get; set; }
+        public DateTime TimeServer { get; set; }
+    }
+
     public class AddRequestResponse
     {
         public int Cnt { get; set; }

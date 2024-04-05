@@ -56,7 +56,6 @@ F:\StaffSearch\bin\Debug\Microsoft.Extensions.DependencyInjection.Abstractions.d
 F:\StaffSearch\bin\Debug\Microsoft.Extensions.Logging.Abstractions.dll
 F:\StaffSearch\bin\Debug\Newtonsoft.Json.dll
 F:\StaffSearch\bin\Debug\Npgsql.dll
-F:\StaffSearch\bin\Debug\SAE.dll
 F:\StaffSearch\bin\Debug\System.Buffers.dll
 F:\StaffSearch\bin\Debug\System.Collections.Immutable.dll
 F:\StaffSearch\bin\Debug\System.ComponentModel.Annotations.dll
@@ -76,7 +75,6 @@ F:\StaffSearch\bin\Debug\Microsoft.Extensions.DependencyInjection.Abstractions.x
 F:\StaffSearch\bin\Debug\Microsoft.Extensions.Logging.Abstractions.xml
 F:\StaffSearch\bin\Debug\Newtonsoft.Json.xml
 F:\StaffSearch\bin\Debug\Npgsql.xml
-F:\StaffSearch\bin\Debug\SAE.pdb
 F:\StaffSearch\bin\Debug\System.Buffers.xml
 F:\StaffSearch\bin\Debug\System.Collections.Immutable.xml
 F:\StaffSearch\bin\Debug\System.Diagnostics.DiagnosticSource.xml
