@@ -151,25 +151,31 @@ namespace StaffSearch
                     return;
                 }
 
+                var intro = "Welcome to the Staff Airlines bot" + Environment.NewLine + Environment.NewLine +
+                    "Main commands:" + Environment.NewLine + Environment.NewLine + "SEARCH FOR FLIGHTS" + Environment.NewLine +
+                    "To search, use airport or city codes. For example, NYCLAX - search from New York (NYC) to Los Angeles (LAX)." + Environment.NewLine +
+                    "NYCLAX - search for current date" + Environment.NewLine + "NYCLAX15 - search for the 15th" + Environment.NewLine +
+                    "NYCLAX15/2 - search for two passengers" + Environment.NewLine + Environment.NewLine + "FLIGHT DETAILS" + Environment.NewLine + "Number of line in the flights list, for example 1 or 15";
+
                 if (message?.Text?.ToLower() == "/start")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Инструкция, как пользоваться ботом");
+                    await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
 
                     if (user.Token == null)
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+                        await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
                         cache.Add("User" + userid.Value, "entertoken", policyuser);
                     }
                     else if (user.own_ac == "??")
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code:");
+                        await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
 
                         cache.Add("User" + userid.Value, "preset", policyuser);
                     }
                     else
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "You can do a search!");
+                        await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                     }
 
                     //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
@@ -178,9 +184,14 @@ namespace StaffSearch
 
                     return;
                 }
+                else if (message?.Text?.ToLower() == "/help")
+                {
+                    await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
+                    return;
+                }
                 else if (message?.Text?.ToLower() == "/profile")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+                    await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
                     cache.Add("User" + userid.Value, "entertoken", policyuser);
 
@@ -188,7 +199,7 @@ namespace StaffSearch
                 }
                 else if (message?.Text?.ToLower() == "/preset")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code:");
+                    await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code (for example: AA):");
 
                     cache.Add("User" + userid.Value, "preset", policyuser);
 
@@ -217,13 +228,13 @@ namespace StaffSearch
 
                             if (user.own_ac == "??")
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code:");
+                                await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
 
                                 cache.Add("User" + userid.Value, "preset", policyuser);
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + user.own_ac + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All Airlines permitted" : user.permitted_ac) + Environment.NewLine + "You can do a search!");
+                                await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All airlines" : user.permitted_ac) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                             }
                         }
                         else
@@ -231,7 +242,7 @@ namespace StaffSearch
                             await botClient.SendTextMessageAsync(message.Chat, alert);
                             if (user is null || user.id == 0 || user.Token is null)
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+                                await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
                             }
                             else
                             {
@@ -246,10 +257,10 @@ namespace StaffSearch
                     }
                     else
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "The GUID must contain 32 digits and 4 hyphens!");
+                        await botClient.SendTextMessageAsync(message.Chat, "The UID must contain 32 digits/letters." + Environment.NewLine + "(For example: 7ece3818-c4b4-4f3a-b94e-82d37b1ff8a1)");
                         if (user is null || user.Token is null)
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+                            await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
                         }
                         else
                         {
@@ -286,11 +297,11 @@ namespace StaffSearch
 
                         cache.Remove("User" + message.Chat.Id);
 
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac.ToUpper() + Environment.NewLine + "Permitted: " + (string.IsNullOrEmpty(sperm) ? "All Airlines permitted" : sperm) + Environment.NewLine + "You can do a search!");
+                        await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + ac.ToUpper() + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(sperm) ? "All airlines" : sperm) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                     }
                     else
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "Own ac: " + ac + " not found! Enter the correct code of your airline:");
+                        await botClient.SendTextMessageAsync(message.Chat, "Airline code" + ac + "not found! Enter your airline's code:");
                     }
                     //}
                     return;
@@ -319,6 +330,11 @@ namespace StaffSearch
                         paxint = int.TryParse(comsplit[1], out pax);
                     }
 
+                    if (paxint && (pax > 4 || pax < 1))
+                    {
+                        pax = 1;
+                    }
+
                     eventLogBot.WriteEntry("From: " + From + ", To: " + To + ", dt: " + dt + ", pax: " + pax);
 
                     if (dt.Length <= 4 && paxint)
@@ -331,7 +347,21 @@ namespace StaffSearch
                         }
                         catch
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Неизвестный пункт вылета!");
+                            await botClient.SendTextMessageAsync(message.Chat, From.ToUpper() + " – departure point is unknown!");
+                            return;
+                        }
+
+                        var FromLoc = Methods.GetLocation(From);
+                        if (FromLoc == null)
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, From.ToUpper() + " – departure point is unknown!");
+                            return;
+                        }
+
+                        var ToLoc = Methods.GetLocation(To);
+                        if (ToLoc == null)
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, To.ToUpper() + " - destination point is unknown!");
                             return;
                         }
 
@@ -388,7 +418,7 @@ namespace StaffSearch
                         {
                             if (user == null || user.Token == null)
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Для поиска не на текущую дату необходимо авторизоваться (/profile)");
+                                await botClient.SendTextMessageAsync(message.Chat, "To search for dates other than the current date, you have to log in (/profile)");
                                 SearchAvailable = false;
                             }
                             else
@@ -399,7 +429,7 @@ namespace StaffSearch
 
                                 if (!Prof.Premium)
                                 {
-                                    await botClient.SendTextMessageAsync(message.Chat, "Для поиска на любую дату необходимо приобрести подписку");
+                                    await botClient.SendTextMessageAsync(message.Chat, "To search for any date, you must purchase a subscription (in the Staff Airlines app or in the @StaffAirlinesBot channel, if you earned tokens there)");
                                     SearchAvailable = false;
                                 }
                             }
@@ -407,7 +437,7 @@ namespace StaffSearch
 
                         if (SearchAvailable)
                         {
-                            var findbeg = "Search from " + From + " to " + To + " on " + searchdt.ToString("MMMM d", CultureInfo.CreateSpecificCulture("en-US")) + " for " + pax + " pax";
+                            var findbeg = "Search from " + FromLoc.Name + " (" + From + ") to " + ToLoc.Name + " (" + To + ") on " + searchdt.ToString("MMMM d", CultureInfo.CreateSpecificCulture("en-US")) + " for " + pax + " pax";
                             await botClient.SendTextMessageAsync(message.Chat, findbeg);
 
                             if (user == null)
@@ -466,7 +496,7 @@ namespace StaffSearch
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) ? "Not Found!" : exres0.Alert);
+                                await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) ? "Direct flights not found" : exres0.Alert);
                             }
                         }
                     }
@@ -583,7 +613,13 @@ namespace StaffSearch
                                 classes += string.Join(" ", Fl.NumSeatsForBookingClass);
                             }
 
-                            string res = Fl.MarketingName + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.EquipmentName + " -" + Fl.TS + "-" + Environment.NewLine + Environment.NewLine +
+                            string strOper = "";
+                            if (Fl.OperatingCarrier != Fl.MarketingCarrier)
+                            {
+                                strOper = Environment.NewLine + "operated by " + Fl.OperatingCarrier + " (" + Fl.OperatingName + ")";
+                            }
+
+                            string res = Fl.MarketingName + " " + Fl.MarketingCarrier + Fl.FlightNumber + strOper + Environment.NewLine + Fl.EquipmentName + Environment.NewLine + Environment.NewLine +
                             Fl.DepartureDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.DepartureDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.DepartureCityName) ? Fl.DepartureCityName + ", " : "") + Fl.DepartureName + " (" + Fl.Origin + ")" + (!string.IsNullOrEmpty(Fl.DepartureTerminal) ? ", Terminal " + Fl.DepartureTerminal : "") + Environment.NewLine +
                             "In flight " + GetTimeAsHM2(Fl.Duration) + Environment.NewLine +
                             Fl.ArrivalDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.ArrivalDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.ArrivalCityName) ? Fl.ArrivalCityName + ", " : "") + Fl.ArrivalName + " (" + Fl.Destination + ")" + (!string.IsNullOrEmpty(Fl.ArrivalTerminal) ? ", Terminal " + Fl.ArrivalTerminal : "") + Environment.NewLine + Environment.NewLine +
@@ -593,21 +629,28 @@ namespace StaffSearch
 
                             cache.Add("key:" + Fl.MarketingCarrier + Fl.FlightNumber, res, policyuser);
 
-                            var ikm = new InlineKeyboardMarkup(new[]
+                            if (Methods.AgentExist(Fl.OperatingCarrier))
                             {
-                                new[]
+                                var ikm = new InlineKeyboardMarkup(new[]
                                 {
-                                    InlineKeyboardButton.WithCallbackData("Request", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.OperatingCarrier),
-                                },
-                            });
+                                    new[]
+                                    {
+                                        InlineKeyboardButton.WithCallbackData("Request to agent (" + Properties.Settings.Default.AmountTokensForRequest + " token)", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.OperatingCarrier),
+                                    },
+                                });
 
-                            Message tm = await botClient.SendTextMessageAsync(message.Chat, res, null, Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: ikm);
-                            Methods.SaveMessageParameters(tm.Chat.Id, tm.MessageId, 0, 3);
+                                Message tm = await botClient.SendTextMessageAsync(message.Chat, res, null, ParseMode.Html, replyMarkup: ikm);
+                                Methods.SaveMessageParameters(tm.Chat.Id, tm.MessageId, 0, 3);
+                            }
+                            else
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, res + Environment.NewLine + "No agents yet", null, ParseMode.Html);
+                            }
                         }
                     }
                     else
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, "Do a search first!");
+                        await botClient.SendTextMessageAsync(message.Chat, "First you need to do a search (for example: NYCLAX)!");
                     }
 
                     return;
@@ -652,7 +695,7 @@ namespace StaffSearch
                             },
                         });
 
-                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "Own ac: ??" + Environment.NewLine + "Permitted: All Airlines permitted", replyMarkup: ikm);
+                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "Your airline: ??" + Environment.NewLine + "Airlines in results: All airlines", replyMarkup: ikm);
                     }
                     else if (message == "/preset")
                     {
@@ -670,7 +713,7 @@ namespace StaffSearch
                             if (user == null || user.Token == null)
                             {
                                 RequestAvailable = false;
-                                await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "Для отправки запроса необходимо авторизоваться (/profile)");
+                                await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "To request a load from an agent, you will have to log in (/profile)");
                             }
                             else
                             {
@@ -683,7 +726,7 @@ namespace StaffSearch
                                 if (CntTok < AmountTokensForRequest)
                                 {
                                     RequestAvailable = false;
-                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "Для запроса необходимы токены (" + AmountTokensForRequest + ")");
+                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "One request to agent costs " + AmountTokensForRequest + " token. Tokens are included in the Premium subscription. If you spend all the tokens from subscription, you could purchase an additional package of tokens on Staff Airlines app. You can also earn tokens as airline’s agent to reply on requests about load your airline's flights in the @StaffAirlinesBot channel. More details staffairlines.com");
                                 }
                             }
 

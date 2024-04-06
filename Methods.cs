@@ -138,7 +138,7 @@ namespace StaffSearch
             {
                 eventLogBot.WriteEntry("A valid token was not found!");
 
-                message = "A valid token was not found!";
+                message = "The token has expired. Token expiration time is 10 minutes. Please release a new token.";
             }
 
             if (user != null && user.own_ac != "??")
@@ -321,6 +321,31 @@ namespace StaffSearch
                 string s = "123";
                 return 0;
             }
+        }
+
+        public static bool AgentExist(string code)
+        {
+            NpgsqlCommand com = new NpgsqlCommand("select reporter from airlines where code=@ac", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = code });
+            bool result = bool.Parse(com.ExecuteScalar().ToString());
+            return result;
+        }
+
+        public static TransferPoint GetLocation(string code)
+        {
+            TransferPoint result = null;
+            NpgsqlCommand com = new NpgsqlCommand("select id, name_en from dir_location where code_iata=@code and basic=1", conn);
+            com.Parameters.Add(new NpgsqlParameter() { ParameterName = "code", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = code });
+            using (NpgsqlDataReader reader = com.ExecuteReader())
+            {
+                if (reader.Read())
+                {
+                    result = new TransferPoint();
+                    result.Name = reader["name_en"].ToString();
+                    result.Origin = code;
+                }                                
+            }
+            return result;
         }
 
         public static AddRequestResponse AddRequest(CallbackQuery query, string id_user)
@@ -586,7 +611,20 @@ namespace StaffSearch
         public static string CorrectTimePassed(int minutes)
         {
             var ts = TimeSpan.FromMinutes(minutes);
-            return ts.Days + "d " + ts.Hours + "h " + ts.Minutes + "m";
+            string result = "";
+            if (ts.Days != 0)
+            {
+                result = ts.Days + "d " + ts.Hours + "h " + ts.Minutes + "m";
+            }
+            else if (ts.Hours != 0)
+            {
+                result = ts.Hours + "h " + ts.Minutes + "m";
+            }
+            else
+            {
+                result = ts.Minutes + "m";
+            }
+            return result;
         }
 
         public static DateTime GetDepartureTimeMsk(string iata, DateTime dt)
