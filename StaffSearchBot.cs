@@ -93,6 +93,14 @@ namespace StaffSearch
 
                 eventLogBot.WriteEntry("Запущен бот " + bot.GetMeAsync().Result.FirstName);
 
+                System.Timers.Timer aTimer = new System.Timers.Timer();
+
+                /*aTimer.Elapsed += new ElapsedEventHandler(this.OnTimedEvent);
+
+                aTimer.Interval = 60000;
+                aTimer.Enabled = true;
+                aTimer.Start();*/
+
                 var cts = new CancellationTokenSource();
                 var cancellationToken = cts.Token;
                 var receiverOptions = new ReceiverOptions
@@ -111,6 +119,23 @@ namespace StaffSearch
                 eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
             }
         }
+
+        /*public void OnTimedEvent(object source, ElapsedEventArgs e)
+        {
+            try
+            {
+                var task = Task.Run(async () => await FindResponse());
+            }
+            catch (Exception ex)
+            {
+                eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
+            }
+        }
+
+        public static async Task FindResponse()
+        {
+
+        }*/
 
         public static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
@@ -150,6 +175,11 @@ namespace StaffSearch
                 {
                     return;
                 }
+
+                /*if ((bool)message?.Text.ToLower().Contains("agent just reported this"))
+                {
+                    var strings = message?.Text.Split('\r');
+                }*/
 
                 var intro = "Welcome to the Staff Airlines bot" + Environment.NewLine + Environment.NewLine +
                     "Main commands:" + Environment.NewLine + Environment.NewLine + "SEARCH FOR FLIGHTS" + Environment.NewLine +
@@ -508,11 +538,11 @@ namespace StaffSearch
                 Guid g;
                 bool isNumeric = int.TryParse(message?.Text, out n);
                 bool isGuid = Guid.TryParse(message?.Text, out g);
-                if (isNumeric && !isGuid && user != null && user.exres != null)
+                if (isNumeric && !isGuid && user != null)
                 {
-                    int? cntf = user.exres?.DirectRes?.Count;
                     if (user.exres?.DirectRes?.Count > 0)
                     {
+                        int? cntf = user.exres?.DirectRes?.Count;
                         if (cntf != null && cntf.Value > 0)
                         {
                             if (n < 1) { n = 1; };
@@ -527,7 +557,7 @@ namespace StaffSearch
                                 {
                                     px = user.SearchParameters.Pax;
                                 }
-                                FlightInfo FInfo = await Methods.GetFlightInfo(Fl.Origin, Fl.Destination, Fl.DepartureDateTime, px, Fl.MarketingCarrier, Fl.FlightNumber);
+                                FlightInfo FInfo = await Methods.GetFlightInfo(Fl.Origin, Fl.Destination, Fl.DepartureDateTime, px, Fl.MarketingCarrier, Fl.FlightNumber, user.Token?.type + "_" + user.Token?.id_user);
                                 Fl = FInfo.Flight;
                                 Fl.TS = DateTime.Now;
                             }
@@ -622,8 +652,8 @@ namespace StaffSearch
                             string res = Fl.MarketingName + " " + Fl.MarketingCarrier + Fl.FlightNumber + strOper + Environment.NewLine + Fl.EquipmentName + Environment.NewLine + Environment.NewLine +
                             Fl.DepartureDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.DepartureDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.DepartureCityName) ? Fl.DepartureCityName + ", " : "") + Fl.DepartureName + " (" + Fl.Origin + ")" + (!string.IsNullOrEmpty(Fl.DepartureTerminal) ? ", Terminal " + Fl.DepartureTerminal : "") + Environment.NewLine +
                             "In flight " + GetTimeAsHM2(Fl.Duration) + Environment.NewLine +
-                            Fl.ArrivalDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.ArrivalDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.ArrivalCityName) ? Fl.ArrivalCityName + ", " : "") + Fl.ArrivalName + " (" + Fl.Destination + ")" + (!string.IsNullOrEmpty(Fl.ArrivalTerminal) ? ", Terminal " + Fl.ArrivalTerminal : "") + Environment.NewLine + Environment.NewLine +
-                            "<b>Status (current): " + (Fl.Rating == RType.Red ? "Bad" : (Fl.Rating == RType.Green ? "Good" : "Medium")) + ", " + Fl.AllPlaces + " seats" + "</b> " + srat + Environment.NewLine + Environment.NewLine +
+                            Fl.ArrivalDateTime.ToString("dd MMM, ddd", CultureInfo.CreateSpecificCulture("en-US")) + " " + Fl.ArrivalDateTime.ToString("HH:mm") + " " + (!string.IsNullOrEmpty(Fl.ArrivalCityName) ? Fl.ArrivalCityName + ", " : "") + Fl.ArrivalName + " (" + Fl.Destination + ")" + (!string.IsNullOrEmpty(Fl.ArrivalTerminal) ? ", Terminal " + Fl.ArrivalTerminal : "") + Environment.NewLine + Environment.NewLine;
+                            string res2 = "<b>Status (current): " + (Fl.Rating == RType.Red ? "Bad" : (Fl.Rating == RType.Green ? "Good" : "Medium")) + ", " + Fl.AllPlaces + " seats" + "</b> " + srat + Environment.NewLine + Environment.NewLine +
                             classes + Environment.NewLine + Environment.NewLine +
                             (Fl.C > 0 ? "<b>Status (forecast): " + ForecastStatus + " (Accuracy: " + Fl.Accuracy + ")" + "</b> " + ForeIcon : "");
 
@@ -635,16 +665,16 @@ namespace StaffSearch
                                 {
                                     new[]
                                     {
-                                        InlineKeyboardButton.WithCallbackData("Request to agent (" + Properties.Settings.Default.AmountTokensForRequest + " token)", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.OperatingCarrier),
+                                        InlineKeyboardButton.WithCallbackData("Request to agent (" + Properties.Settings.Default.AmountTokensForRequest + " token)", "/com " + Fl.Origin + " " + Fl.Destination + " " + Fl.DepartureDateTime.ToString("ddMMyy HHmm") + " " + Fl.MarketingCarrier + Fl.FlightNumber + " " + Fl.OperatingCarrier + " " + user.SearchParameters?.Pax),
                                     },
                                 });
 
-                                Message tm = await botClient.SendTextMessageAsync(message.Chat, res, null, ParseMode.Html, replyMarkup: ikm);
+                                Message tm = await botClient.SendTextMessageAsync(message.Chat, res + res2, null, ParseMode.Html, replyMarkup: ikm);
                                 Methods.SaveMessageParameters(tm.Chat.Id, tm.MessageId, 0, 3);
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, res + Environment.NewLine + "No agents yet", null, ParseMode.Html);
+                                await botClient.SendTextMessageAsync(message.Chat, res + res2 + Environment.NewLine + "No agents yet", null, ParseMode.Html);
                             }
                         }
                     }
@@ -707,7 +737,7 @@ namespace StaffSearch
                     if (message.Length >= 4 && message.Substring(0, 4) == "/com")
                     {
                         var pars = message.Split(' ');
-                        if (pars.Length == 7)
+                        if (pars.Length == 8)
                         {
                             bool RequestAvailable = true;
                             if (user == null || user.Token == null)
@@ -734,26 +764,25 @@ namespace StaffSearch
                             {
                                 eventLogBot.WriteEntry(user.Token.type + "_" + user.Token.id_user);
 
-                                var remreq = Methods.AddRequest(callbackquery, user.Token.type + "_" + user.Token.id_user);
+                                var remreq = await Methods.AddRequest(callbackquery, user.Token.type + "_" + user.Token.id_user);
 
-                                if (remreq.Cnt == -1)
+                                if (remreq != null)
                                 {
-                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have made the maximum number of requests!");
-                                }
-                                else if (remreq.Cnt == -2)
-                                {
-                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have already made a request for this flight!");
-                                }
-                                else
-                                {
-                                    var mespar = Methods.GetMessageParameters(callbackquery.Message.Chat.Id);
-                                    await botClient.EditMessageReplyMarkupAsync(callbackquery.Message.Chat.Id, mespar.MessageId, replyMarkup: null);
-                                    Methods.DelMessageParameters(callbackquery.Message.Chat.Id);
+                                    if (remreq.Status == ReportStatus.already_in_progress)
+                                    {
+                                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have already made a request for this flight!");
+                                    }
+                                    else
+                                    {
+                                        var mespar = Methods.GetMessageParameters(callbackquery.Message.Chat.Id);
+                                        await botClient.EditMessageReplyMarkupAsync(callbackquery.Message.Chat.Id, mespar.MessageId, replyMarkup: null);
+                                        Methods.DelMessageParameters(callbackquery.Message.Chat.Id);
 
-                                    DateTime dreq = new DateTime(2000 + int.Parse(pars[3].Substring(4, 2)), int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
+                                        DateTime dreq = new DateTime(2000 + int.Parse(pars[3].Substring(4, 2)), int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
 
-                                    var reqpost = "You request " + pars[5].Substring(0, 2) + " " + dreq.ToString("dMMM HH:mm", CultureInfo.CreateSpecificCulture("en-US")) + " posted. SubscribeTokens: " + remreq.Tokens.SubscribeTokens + ", NonSubscribeTokens: " + remreq.Tokens.NonSubscribeTokens + ", DebtSubscribeTokens: " + remreq.Tokens.DebtSubscribeTokens + ", DebtNonSubscribeTokens: " + remreq.Tokens.DebtNonSubscribeTokens;
-                                    await botClient.SendTextMessageAsync(callbackquery.Message.Chat, reqpost);
+                                        var reqpost = "Request for flight " + pars[5] + " " + pars[1] + "-" + pars[2] + " at " + dreq.ToString("dd-MM-yyyy HH:mm") + " posted. Your balance: " + (remreq.Tokens.SubscribeTokens + remreq.Tokens.NonSubscribeTokens) + " token(s)";
+                                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, reqpost);
+                                    }
                                 }
                             }
                         }

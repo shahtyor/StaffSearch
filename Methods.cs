@@ -52,7 +52,7 @@ namespace StaffSearch
                 {
                     eventLogBot.WriteEntry("These authorization parameters have already been assigned to another user!");
 
-                    message = "These authorization parameters have already been assigned to another user!";
+                    message = "The app user is already linked to another Telegram profile";
                 }
                 else
                 {
@@ -348,7 +348,30 @@ namespace StaffSearch
             return result;
         }
 
-        public static AddRequestResponse AddRequest(CallbackQuery query, string id_user)
+        public static async Task<ReportRequestStatus> AddRequest(CallbackQuery query, string id_user)
+        {
+            ReportRequestStatus result = null;
+
+            var pars = query.Data.Split(' ');
+            if (pars.Length == 8)
+            {
+                using (HttpClient client = GetClient())
+                {
+                    DateTime DepartureDateTime = new DateTime(int.Parse(pars[3].Substring(4, 2)) + 2000, int.Parse(pars[3].Substring(2, 2)), int.Parse(pars[3].Substring(0, 2)), int.Parse(pars[4].Substring(0, 2)), int.Parse(pars[4].Substring(2, 2)), 0);
+
+                    string Uri = Properties.Settings.Default.UrlApi + "/token/ReportRequest?id_user=" + id_user + "&device_id=&origin=" + pars[1] + "&destination=" + pars[2] + "&operating=" + pars[6] + "&flight=" + pars[5] + "&time=" + DepartureDateTime.ToString("yyyy-MM-dd HH:mm") + "&pax=" + pars[7];
+                    var response = await client.GetAsync(Uri);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = await response.Content.ReadAsStringAsync();
+                        result = JsonConvert.DeserializeObject<ReportRequestStatus>(json);
+                    }
+                }
+            }
+            return result;
+        }
+
+        public static AddRequestResponse AddRequestOld(CallbackQuery query, string id_user)
         {
             var pars = query.Data.Split(' ');
             if (pars.Length == 7)
@@ -487,13 +510,13 @@ namespace StaffSearch
             return new ExtendedResult();
         }
 
-        public static async Task<FlightInfo> GetFlightInfo(string origin, string destination, DateTime date, int pax, string aircompany, string number, string token = "void token")
+        public static async Task<FlightInfo> GetFlightInfo(string origin, string destination, DateTime date, int pax, string aircompany, string number, string id_user, string token = "void token")
         {
             try
             {
                 using (HttpClient client = GetClient())
                 {
-                    string Uri = Properties.Settings.Default.UrlApi + "/amadeus/GetFlightInfo?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd HH:mm") + "&pax=" + pax + "&aircompany=" + aircompany + "&number=" + number + "&now=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "&token=" + token;
+                    string Uri = Properties.Settings.Default.UrlApi + "/amadeus/GetFlightInfo?origin=" + origin + "&destination=" + destination + "&date=" + date.ToString("yyyy-MM-dd HH:mm") + "&pax=" + pax + "&aircompany=" + aircompany + "&number=" + number + "&now=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm") + "&token=" + token + "&id_user=" + id_user;
                     var response = await client.GetAsync(Uri);
                     if (response.IsSuccessStatusCode)
                     {

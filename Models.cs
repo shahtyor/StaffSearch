@@ -56,6 +56,14 @@ namespace StaffSearch
         Delete = 1
     }
 
+    public enum ReportStatus
+    {
+        success = 0,
+        error = 1,
+        already_in_progress = 2,
+        already_in_progress_another = 3,
+    }
+
     public class ExtendedResult
     {
         public List<Flight> DirectRes { get; set; }
@@ -207,6 +215,13 @@ namespace StaffSearch
         public string CountryName { get; set; }
 
         public int? Distance { get; set; }
+    }
+
+    public class ReportRequestStatus
+    {
+        public ReportStatus Status { get; set; }
+        public string StatusName { get; set; }
+        public TokenCollection Tokens { get; set; }
     }
 
     public class NonDirectResult
