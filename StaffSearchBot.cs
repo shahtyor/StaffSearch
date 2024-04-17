@@ -181,6 +181,12 @@ namespace StaffSearch
                     var strings = message?.Text.Split('\r');
                 }*/
 
+                string idus = message.Chat.Id.ToString();
+                if (user.Token != null)
+                {
+                    idus = user.Token.type + "_" + user.Token.id_user;
+                }
+
                 var intro = "Welcome to the Staff Airlines bot" + Environment.NewLine + Environment.NewLine +
                     "Main commands:" + Environment.NewLine + Environment.NewLine + "SEARCH FOR FLIGHTS" + Environment.NewLine +
                     "To search, use airport or city codes. For example, NYCLAX - search from New York (NYC) to Los Angeles (LAX)." + Environment.NewLine +
@@ -193,6 +199,12 @@ namespace StaffSearch
 
                     if (user.Token == null)
                     {
+                        // отправляем событие «первое появление  пользователя в поисковом боте (/start)» в амплитуд
+                        string DataJson = "[{\"user_id\":\"" + message.Chat.Id + "\", \"event_type\":\"tg sb join\"," +
+                            "\"user_properties\":{\"is_requestor\":\"no\"," +
+                            "\"id_telegram\":\"" + message.Chat.Id + "\"}}]";
+                        var r = await Methods.AmplitudePOST(DataJson);
+
                         await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
                         cache.Add("User" + userid.Value, "entertoken", policyuser);
@@ -223,13 +235,22 @@ namespace StaffSearch
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
+                    // отправляем событие «запрос uid для линковки профиля (/profile)» в амплитуд
+                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg start link profile\"," +
+                        "\"event_properties\":{\"bot\":\"sb\"}}]";
+                    var r = await Methods.AmplitudePOST(DataJson);
+
                     cache.Add("User" + userid.Value, "entertoken", policyuser);
 
                     return;
                 }
-                else if (message?.Text?.ToLower() == "/preset")
+                else if (message?.Text?.ToLower() == "/airline")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code (for example: AA):");
+
+                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg start set ac\"," +
+                        "\"event_properties\":{\"bot\":\"sb\"}}]";
+                    var r = await Methods.AmplitudePOST(DataJson);
 
                     cache.Add("User" + userid.Value, "preset", policyuser);
 
@@ -326,6 +347,11 @@ namespace StaffSearch
                         });*/
 
                         cache.Remove("User" + message.Chat.Id);
+
+                        string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg set ac\"," +
+                            "\"user_properties\":{\"ac\":\"" + ac.ToUpper() + "\"}," +
+                            "\"event_properties\":{\"bot\":\"sb\"}}]";
+                        var r = await Methods.AmplitudePOST(DataJson);
 
                         await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + ac.ToUpper() + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(sperm) ? "All airlines" : sperm) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                     }
@@ -455,6 +481,10 @@ namespace StaffSearch
                             {
                                 var Prof = await Methods.TokenProfile(user.Token.type + "_" + user.Token.id_user);
 
+                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"void\"," +
+                                    "\"user_properties\":{\"paidStatus\":\"" + (Prof.Premium ? "premiumAccess" : "free plan") + "\"}}]";
+                                var r = await Methods.AmplitudePOST(DataJson);
+
                                 eventLogBot.WriteEntry("Prof: " + Prof.SubscribeTokens + "-" + Prof.NonSubscribeTokens + "-" + Prof.Premium.ToString());
 
                                 if (!Prof.Premium)
@@ -485,6 +515,17 @@ namespace StaffSearch
                             }
 
                             ExtendedResult exres0 = await Methods.ExtendedSearch(From, To, searchdt, user.permitted_ac, false, GetNonDirectType.Off, pax, "USD", "EN", "RU", "bot" + message.Chat.Id, false, "3.0", null, id_user_search);
+
+                            //Пользователь запустил поиск
+                            string DataJson = "[{\"user_id\":\"" + idus + "\",\"event_type\":\"Extended search started\",\"platform\":\"Telegram\"," +
+                                "\"event_properties\":{\"Origin\":\"" + From + "\"," +
+                                "\"Destination\":\"" + To + "\"," +
+                                "\"Date\":" + Convert.ToInt32((searchdt - DateTime.Today).TotalDays) + "," +
+                                "\"Passengers\":" + pax + "," +
+                                "\"Country origin\":\"" + FromLoc.CountryName + "\"," +
+                                "\"Country destination\":\"" + ToLoc.CountryName + "\"}}]";
+                            var r = await Methods.AmplitudePOST(DataJson);
+
                             SetTSOnResult(exres0);
                             user.SearchParameters = new SearchParam() { Origin = From, Destination = To, Date = searchdt, Pax = pax };
                             user.exres = exres0;
@@ -596,6 +637,7 @@ namespace StaffSearch
 
                             string classes = "Classes available: ";
 
+                            bool HideSomeInfo = false;
                             if (Fl.AgentInfo != null)
                             {
                                 int cntreq = 0;
@@ -613,7 +655,7 @@ namespace StaffSearch
                                     }
                                 }
 
-                                bool HideSomeInfo = cntreq == 0;
+                                HideSomeInfo = cntreq == 0;
 
                                 if (Fl.AgentInfo.TimePassed <= Properties.Settings.Default.AgentTimePassed)
                                 {
@@ -659,7 +701,8 @@ namespace StaffSearch
 
                             cache.Add("key:" + Fl.MarketingCarrier + Fl.FlightNumber, res, policyuser);
 
-                            if (Methods.AgentExist(Fl.OperatingCarrier))
+                            bool AgentExist = Methods.AgentExist(Fl.OperatingCarrier);
+                            if (AgentExist)
                             {
                                 var ikm = new InlineKeyboardMarkup(new[]
                                 {
@@ -676,6 +719,18 @@ namespace StaffSearch
                             {
                                 await botClient.SendTextMessageAsync(message.Chat, res + res2 + Environment.NewLine + "No agents yet", null, ParseMode.Html);
                             }
+
+                            //Детализация варианта, посылаем такой из аппов
+                            string DataJson = "[{\"user_id\":\"" + idus + "\",\"event_type\":\"Details show direct\",\"platform\":\"Telegram\"," +
+                                "\"event_properties\":{\"ac\":\"" + Fl.OperatingCarrier + "\"," +
+                                "\"ForecastAccuracy\":\"" + Fl.Accuracy + "\"," +
+                                "\"ForecastRating\":" + Fl.Forecast.ToString().Replace(",", ".") + "," +
+                                "\"Rating\":\"" + (Fl.Rating == RType.Red ? "Bad" : (Fl.Rating == RType.Green ? "Good" : "Medium")) + "\"," +
+                                "\"dataClassesFromAgent\":\"" + (Fl.AgentInfo != null && !HideSomeInfo ? "yes" : "no") + "\"," +
+                                "\"dataSAFromAgent\":\"" + (Fl.AgentInfo != null ? "yes" : "no") + "\"," +
+                                "\"ageDataFromAgent\":" + (Fl.AgentInfo != null ? Fl.AgentInfo.TimePassed : -1) + "," +
+                                "\"agents\":\"" + (AgentExist ? "yes" : "no") + "\"}}]";
+                            var r = await Methods.AmplitudePOST(DataJson);
                         }
                     }
                     else
@@ -750,6 +805,10 @@ namespace StaffSearch
                                 int AmountTokensForRequest = int.Parse(Properties.Settings.Default.AmountTokensForRequest);
                                 var Prof = await Methods.TokenProfile(user.Token.type + "_" + user.Token.id_user);
 
+                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"void\"," +
+                                    "\"user_properties\":{\"paidStatus\":\"" + (Prof.Premium ? "premiumAccess" : "free plan") + "\"}}]";
+                                var r = await Methods.AmplitudePOST(DataJson);
+
                                 eventLogBot.WriteEntry("TokenProfile: " + user.Token.type + "_" + user.Token.id_user + ", Prof: " + Newtonsoft.Json.JsonConvert.SerializeObject(Prof));
 
                                 var CntTok = Prof.SubscribeTokens + Prof.NonSubscribeTokens;
@@ -770,7 +829,7 @@ namespace StaffSearch
                                 {
                                     if (remreq.Status == ReportStatus.already_in_progress)
                                     {
-                                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You have already made a request for this flight!");
+                                        await botClient.SendTextMessageAsync(callbackquery.Message.Chat, "You already have an active request for this flight!");
                                     }
                                     else
                                     {
@@ -782,6 +841,12 @@ namespace StaffSearch
 
                                         var reqpost = "Request for flight " + pars[5] + " " + pars[1] + "-" + pars[2] + " at " + dreq.ToString("dd-MM-yyyy HH:mm") + " posted. Your balance: " + (remreq.Tokens.SubscribeTokens + remreq.Tokens.NonSubscribeTokens) + " token(s)";
                                         await botClient.SendTextMessageAsync(callbackquery.Message.Chat, reqpost);
+
+                                        //при успешном создании запроса к агенту
+                                        string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"tg user request to agent\"," +
+                                            "\"event_properties\":{\"ac\":\"" + pars[6] + "\",\"id_group\":" + remreq.IdGroup + ",\"platform\":\"telegram\"}}]";
+                                        var r = await Methods.AmplitudePOST(DataJson);
+
                                     }
                                 }
                             }
@@ -816,6 +881,18 @@ namespace StaffSearch
                 if (CM.Status == ChatMemberStatus.Kicked) // Заблокировал чат
                 {
                     Methods.UserBlockChat(userid.Value, AirlineAction.Delete);
+                   
+                    string idus = myChatMember.From.Id.ToString();
+                    if (user.Token != null)
+                    {
+                        idus = user.Token.type + "_" + user.Token.id_user;
+                    }
+
+                    //пользователь покинул агентский бот
+                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg left user\"," +
+                        "\"user_properties\":{\"is_requestor\":\"no\"}," +
+                        "\"event_properties\":{\"ac\":\"" + user.own_ac + "\"}}]";
+                    var r = await Methods.AmplitudePOST(DataJson);
                 }
                 else if (CM.Status == ChatMemberStatus.Member) // Разблокировал чат
                 {

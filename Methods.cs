@@ -50,9 +50,9 @@ namespace StaffSearch
                 var exist = TokenAlreadySet(token, id);
                 if (exist)
                 {
-                    eventLogBot.WriteEntry("These authorization parameters have already been assigned to another user!");
+                    eventLogBot.WriteEntry("The app user is already linked to another Telegram profile!");
 
-                    message = "The app user is already linked to another Telegram profile";
+                    message = "The app user is already linked to another Telegram profile!";
                 }
                 else
                 {
@@ -80,6 +80,15 @@ namespace StaffSearch
                             reader.Dispose();
                             com.Dispose();
 
+                            if (new_ac != "??")
+                            {
+                                // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
+                                string DataJson = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\", \"event_type\":\"tg new user\"," +
+                                    "\"user_properties\":{\"is_requestor\":\"yes\"," +
+                                    "\"ac\":\"" + new_ac + "\"}}]";
+                                var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
+                            }
+
                             NpgsqlCommand com3 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor, id=@id, own_ac=@own_ac where id_user=@id_user", conn);
                             com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
                             com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
@@ -97,12 +106,27 @@ namespace StaffSearch
                                 eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
                             }
                             com3.Dispose();
+
+                            // отправляем событие «успешная линковка» в амплитуд
+                            string DataJson2 = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\", \"event_type\":\"tg link profile\"," +
+                                "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
+                                "\"user_properties\":{\"id_telegram\":" + id + ",\"is_requestor\":\"yes\",\"ac\":\"" + new_ac + "\"}}]";
+                            var task2 = Task.Run(async () => await Methods.AmplitudePOST(DataJson2));
                         }
                         else
                         {
                             reader.Close();
                             reader.Dispose();
                             com.Dispose();
+
+                            if (new_ac != "??")
+                            {
+                                // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
+                                string DataJson = "[{\"user_id\":\"" + id + "\", \"event_type\":\"tg new user\"," +
+                                    "\"user_properties\":{\"is_requestor\":\"yes\"," +
+                                    "\"ac\":\"" + new_ac + "\"}}]";
+                                var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
+                            }
 
                             NpgsqlCommand com2 = new NpgsqlCommand("insert into telegram_user (id, first_use, own_ac, is_reporter, is_requestor, id_user) values (@id, @first_use, @own_ac, @is_reporter, @is_requestor, @id_user)", conn);
                             com2.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
@@ -124,6 +148,12 @@ namespace StaffSearch
                                 eventLogBot.WriteEntry(ex.Message + "..." + e);
                             }
                             com2.Dispose();
+
+                            // отправляем событие «успешная линковка» в амплитуд
+                            string DataJson2 = "[{\"user_id\":\"" + id + "\", \"event_type\":\"tg link profile\"," +
+                                "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
+                                "\"user_properties\":{\"customer_id\":\"" + token.type + "_" + token.id_user + "\",\"ac\":\"" + new_ac + "\"}}]";
+                            var task2 = Task.Run(async () => await Methods.AmplitudePOST(DataJson2));
 
                             user = new telegram_user() { id = id, first_use = DateTime.Now, own_ac = new_ac, is_reporter = false, is_requestor = true, Token = token };
                         }
@@ -288,12 +318,16 @@ namespace StaffSearch
         public static async Task<string> AmplitudePOST(string Data)
         {
             string result = null;
-            var client = new RestClient("https://api.amplitude.com/httpapi");
-            var request = new RestRequest((string)null, Method.Post);
-            request.AddHeader("content-type", "application/x-www-form-urlencoded");
-            request.AddParameter("api_key", "95be547554caecf51c57c691bafb2640");
-            request.AddParameter("event", Data);
-            await client.ExecuteAsync(request).ContinueWith(t => { result = t.Result.Content; });
+            try
+            {
+                var client = new RestClient("https://api.amplitude.com/httpapi");
+                var request = new RestRequest((string)null, Method.Post);
+                request.AddHeader("content-type", "application/x-www-form-urlencoded");
+                request.AddParameter("api_key", "95be547554caecf51c57c691bafb2640");
+                request.AddParameter("event", Data);
+                await client.ExecuteAsync(request).ContinueWith(t => { result = t.Result.Content; });
+            }
+            catch { }
             return result;
         }
 
@@ -334,7 +368,7 @@ namespace StaffSearch
         public static TransferPoint GetLocation(string code)
         {
             TransferPoint result = null;
-            NpgsqlCommand com = new NpgsqlCommand("select id, name_en from dir_location where code_iata=@code and basic=1", conn);
+            NpgsqlCommand com = new NpgsqlCommand("select l.id, l.name_en, c.name_en as country_name from dir_location l left join dir_location c on l.id_country=c.id where l.code_iata=@code and l.basic=1", conn);
             com.Parameters.Add(new NpgsqlParameter() { ParameterName = "code", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Text, Value = code });
             using (NpgsqlDataReader reader = com.ExecuteReader())
             {
@@ -343,6 +377,7 @@ namespace StaffSearch
                     result = new TransferPoint();
                     result.Name = reader["name_en"].ToString();
                     result.Origin = code;
+                    result.CountryName = reader["country_name"].ToString();
                 }                                
             }
             return result;
@@ -806,6 +841,18 @@ namespace StaffSearch
                         com2.ExecuteNonQuery();
                         com2.Dispose();
                         connect.Close();
+                    }
+
+                    if (user.own_ac != "??")
+                    {
+                        // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
+                        string idus = id.ToString();
+                        if (!string.IsNullOrEmpty(id_user)) idus = id_user;
+
+                        string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg new user\"," +
+                            "\"event_properties\":{\"is_requestor\":\"yes\"," +
+                            "\"ac\":\"" + user.own_ac + "\"}}]";
+                        var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
                     }
                 }
             }

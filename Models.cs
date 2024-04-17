@@ -222,6 +222,7 @@ namespace StaffSearch
         public ReportStatus Status { get; set; }
         public string StatusName { get; set; }
         public TokenCollection Tokens { get; set; }
+        public long IdGroup { get; set; }
     }
 
     public class NonDirectResult
