@@ -68,11 +68,7 @@ namespace StaffSearch
 
                         if (reader.Read())
                         {
-                            user = new telegram_user() { first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = true, Token = token };
-                            if (user.id == null)
-                            {
-                                user.id = id;
-                            }
+                            user = new telegram_user() { id = (long?)reader["id"], first_use = (DateTime)reader["first_use"], own_ac = reader["own_ac"].ToString(), is_reporter = (bool)reader["is_reporter"], is_requestor = true, Token = token };
 
                             eventLogBot.WriteEntry("ProfileCommand. " + JsonConvert.SerializeObject(user));
 
@@ -80,38 +76,46 @@ namespace StaffSearch
                             reader.Dispose();
                             com.Dispose();
 
-                            if (new_ac != "??")
+                            if (!user.is_requestor)
                             {
-                                // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
-                                string DataJson = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\", \"event_type\":\"tg new user\"," +
-                                    "\"user_properties\":{\"is_requestor\":\"yes\"," +
-                                    "\"ac\":\"" + new_ac + "\"}}]";
-                                var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
-                            }
+                                if (new_ac != "??")
+                                {
+                                    // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
+                                    string DataJson = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"tg new user\"," +
+                                        "\"user_properties\":{\"is_requestor\":\"yes\"," +
+                                        "\"ac\":\"" + new_ac + "\"}}]";
+                                    var r = AmplitudePOST(DataJson);
+                                }
 
-                            NpgsqlCommand com3 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor, id=@id, own_ac=@own_ac where id_user=@id_user", conn);
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "own_ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Char, Value = new_ac });
-                            com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = token.type + "_" + token.id_user });
+                                NpgsqlCommand com3 = new NpgsqlCommand("update telegram_user set is_requestor=@is_requestor, id=@id, own_ac=@own_ac where id_user=@id_user", conn);
+                                com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Bigint, Value = id });
+                                com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "is_requestor", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Boolean, Value = true });
+                                com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "own_ac", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Char, Value = new_ac });
+                                com3.Parameters.Add(new NpgsqlParameter() { ParameterName = "id_user", NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Varchar, Value = token.type + "_" + token.id_user });
 
-                            eventLogBot.WriteEntry(com3.CommandText);
+                                eventLogBot.WriteEntry(com3.CommandText);
 
-                            try
-                            {
-                                com3.ExecuteNonQuery();
+                                try
+                                {
+                                    com3.ExecuteNonQuery();
+                                }
+                                catch (Exception ex)
+                                {
+                                    eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
+                                }
+                                com3.Dispose();
                             }
-                            catch (Exception ex)
-                            {
-                                eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
-                            }
-                            com3.Dispose();
 
                             // отправляем событие «успешная линковка» в амплитуд
-                            string DataJson2 = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\", \"event_type\":\"tg link profile\"," +
+                            string DataJson2 = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"tg link profile\"," +
                                 "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
                                 "\"user_properties\":{\"id_telegram\":" + id + ",\"is_requestor\":\"yes\",\"ac\":\"" + new_ac + "\"}}]";
-                            var task2 = Task.Run(async () => await Methods.AmplitudePOST(DataJson2));
+                            var r2 = AmplitudePOST(DataJson2);
+
+                            DataJson2 = "[{\"user_id\":\"" + id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg link profile\"," +
+                                "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
+                                "\"user_properties\":{\"customerID\":\"" + token.type + "_" + token.id_user + "\",\"ac\":\"" + new_ac + "\"}}]";
+                            r2 = AmplitudePOST(DataJson2);
                         }
                         else
                         {
@@ -122,10 +126,10 @@ namespace StaffSearch
                             if (new_ac != "??")
                             {
                                 // отправляем событие «когда создаем новую запись в таблице пользователей телеги с is requestor = true, или проставляем для существующей записи is requestor = true (в обоих случаях должна быть указана а/к пользователя)» в амплитуд
-                                string DataJson = "[{\"user_id\":\"" + id + "\", \"event_type\":\"tg new user\"," +
+                                string DataJson = "[{\"user_id\":\"" + id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg new user\"," +
                                     "\"user_properties\":{\"is_requestor\":\"yes\"," +
                                     "\"ac\":\"" + new_ac + "\"}}]";
-                                var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
+                                var r = AmplitudePOST(DataJson);
                             }
 
                             NpgsqlCommand com2 = new NpgsqlCommand("insert into telegram_user (id, first_use, own_ac, is_reporter, is_requestor, id_user) values (@id, @first_use, @own_ac, @is_reporter, @is_requestor, @id_user)", conn);
@@ -150,10 +154,15 @@ namespace StaffSearch
                             com2.Dispose();
 
                             // отправляем событие «успешная линковка» в амплитуд
-                            string DataJson2 = "[{\"user_id\":\"" + id + "\", \"event_type\":\"tg link profile\"," +
+                            string DataJson2 = "[{\"user_id\":\"" + token.type + "_" + token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"tg link profile\"," +
+                               "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
+                               "\"user_properties\":{\"id_telegram\":" + id + ",\"is_requestor\":\"yes\",\"ac\":\"" + new_ac + "\"}}]";
+                            var r2 = AmplitudePOST(DataJson2);
+
+                            DataJson2 = "[{\"user_id\":\"" + id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg link profile\"," +
                                 "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
                                 "\"user_properties\":{\"customer_id\":\"" + token.type + "_" + token.id_user + "\",\"ac\":\"" + new_ac + "\"}}]";
-                            var task2 = Task.Run(async () => await Methods.AmplitudePOST(DataJson2));
+                            r2 = AmplitudePOST(DataJson2);
 
                             user = new telegram_user() { id = id, first_use = DateTime.Now, own_ac = new_ac, is_reporter = false, is_requestor = true, Token = token };
                         }
@@ -290,10 +299,10 @@ namespace StaffSearch
                         com.Dispose();
 
                         // отправляем событие «change reporters for ac» в амплитуд
-                        string DataJson2 = "[{\"event_type\":\"change reporters for ac\"," +
+                        string DataJson2 = "[{\"event_type\":\"change reporters for ac\",\"platform\":\"Telegram\"," +
                             "\"event_properties\":{\"ac\":\"" + ac + "\"," +
                             "\"new_status\":\"false\"}}]";
-                        var task2 = Task.Run(async () => await AmplitudePOST(DataJson2));
+                        var r2 = AmplitudePOST(DataJson2);
                     }
                 }
                 else
@@ -306,29 +315,24 @@ namespace StaffSearch
                         com.Dispose();
 
                         // отправляем событие «change reporters for ac» в амплитуд
-                        string DataJson = "[{\"event_type\":\"change reporters for ac\"," +
+                        string DataJson = "[{\"event_type\":\"change reporters for ac\",\"platform\":\"Telegram\"," +
                             "\"event_properties\":{\"ac\":\"" + ac + "\"," +
                             "\"new_status\":\"true\"}}]";
-                        var task = Task.Run(async () => await AmplitudePOST(DataJson));
+                        var r = AmplitudePOST(DataJson);
                     }
                 }
             }
         }
 
-        public static async Task<string> AmplitudePOST(string Data)
+        public static string AmplitudePOST(string Data)
         {
-            string result = null;
-            try
-            {
-                var client = new RestClient("https://api.amplitude.com/httpapi");
-                var request = new RestRequest((string)null, Method.Post);
-                request.AddHeader("content-type", "application/x-www-form-urlencoded");
-                request.AddParameter("api_key", "95be547554caecf51c57c691bafb2640");
-                request.AddParameter("event", Data);
-                await client.ExecuteAsync(request).ContinueWith(t => { result = t.Result.Content; });
-            }
-            catch { }
-            return result;
+            var client = new RestClient("https://api.amplitude.com/httpapi");
+            var request = new RestRequest(Method.POST);
+            request.AddHeader("content-type", "application/x-www-form-urlencoded");
+            request.AddParameter("api_key", "95be547554caecf51c57c691bafb2640");
+            request.AddParameter("event", Data);
+            IRestResponse result = client.Execute(request);
+            return result.Content;
         }
 
         public static int TestAC(string ac)
@@ -849,10 +853,10 @@ namespace StaffSearch
                         string idus = id.ToString();
                         if (!string.IsNullOrEmpty(id_user)) idus = id_user;
 
-                        string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg new user\"," +
+                        string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg new user\"," +
                             "\"event_properties\":{\"is_requestor\":\"yes\"," +
                             "\"ac\":\"" + user.own_ac + "\"}}]";
-                        var task = Task.Run(async () => await Methods.AmplitudePOST(DataJson));
+                        var r = AmplitudePOST(DataJson);
                     }
                 }
             }

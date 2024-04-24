@@ -197,15 +197,16 @@ namespace StaffSearch
                 {
                     await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
 
+                    // отправляем событие «первое появление  пользователя в поисковом боте (/start)» в амплитуд
+                    string DataJson = "[{\"user_id\":\"" + message.Chat.Id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg sb join\"," +
+                         "\"user_properties\":{\"is_requestor\":\"no\"," +
+                         "\"id_telegram\":\"" + message.Chat.Id + "\"}}]";
+                    var r = Methods.AmplitudePOST(DataJson);
+
                     if (user.Token == null)
                     {
-                        // отправляем событие «первое появление  пользователя в поисковом боте (/start)» в амплитуд
-                        string DataJson = "[{\"user_id\":\"" + message.Chat.Id + "\", \"event_type\":\"tg sb join\"," +
-                            "\"user_properties\":{\"is_requestor\":\"no\"," +
-                            "\"id_telegram\":\"" + message.Chat.Id + "\"}}]";
-                        var r = await Methods.AmplitudePOST(DataJson);
 
-                        await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                        await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
                         cache.Add("User" + userid.Value, "entertoken", policyuser);
                     }
@@ -233,12 +234,12 @@ namespace StaffSearch
                 }
                 else if (message?.Text?.ToLower() == "/profile")
                 {
-                    await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                    await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
 
                     // отправляем событие «запрос uid для линковки профиля (/profile)» в амплитуд
-                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg start link profile\"," +
+                    string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start link profile\"," +
                         "\"event_properties\":{\"bot\":\"sb\"}}]";
-                    var r = await Methods.AmplitudePOST(DataJson);
+                    var r = Methods.AmplitudePOST(DataJson);
 
                     cache.Add("User" + userid.Value, "entertoken", policyuser);
 
@@ -248,9 +249,9 @@ namespace StaffSearch
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code (for example: AA):");
 
-                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg start set ac\"," +
+                    string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start set ac\"," +
                         "\"event_properties\":{\"bot\":\"sb\"}}]";
-                    var r = await Methods.AmplitudePOST(DataJson);
+                    var r = Methods.AmplitudePOST(DataJson);
 
                     cache.Add("User" + userid.Value, "preset", policyuser);
 
@@ -293,7 +294,7 @@ namespace StaffSearch
                             await botClient.SendTextMessageAsync(message.Chat, alert);
                             if (user is null || user.id == 0 || user.Token is null)
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                                await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
                             }
                             else
                             {
@@ -311,7 +312,7 @@ namespace StaffSearch
                         await botClient.SendTextMessageAsync(message.Chat, "The UID must contain 32 digits/letters." + Environment.NewLine + "(For example: 7ece3818-c4b4-4f3a-b94e-82d37b1ff8a1)");
                         if (user is null || user.Token is null)
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Enter the UID. (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                            await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
                         }
                         else
                         {
@@ -348,10 +349,10 @@ namespace StaffSearch
 
                         cache.Remove("User" + message.Chat.Id);
 
-                        string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg set ac\"," +
+                        string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg set ac\"," +
                             "\"user_properties\":{\"ac\":\"" + ac.ToUpper() + "\"}," +
                             "\"event_properties\":{\"bot\":\"sb\"}}]";
-                        var r = await Methods.AmplitudePOST(DataJson);
+                        var r = Methods.AmplitudePOST(DataJson);
 
                         await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + ac.ToUpper() + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(sperm) ? "All airlines" : sperm) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                     }
@@ -481,9 +482,9 @@ namespace StaffSearch
                             {
                                 var Prof = await Methods.TokenProfile(user.Token.type + "_" + user.Token.id_user);
 
-                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"void\"," +
+                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"void\"," +
                                     "\"user_properties\":{\"paidStatus\":\"" + (Prof.Premium ? "premiumAccess" : "free plan") + "\"}}]";
-                                var r = await Methods.AmplitudePOST(DataJson);
+                                var r = Methods.AmplitudePOST(DataJson);
 
                                 eventLogBot.WriteEntry("Prof: " + Prof.SubscribeTokens + "-" + Prof.NonSubscribeTokens + "-" + Prof.Premium.ToString());
 
@@ -524,7 +525,7 @@ namespace StaffSearch
                                 "\"Passengers\":" + pax + "," +
                                 "\"Country origin\":\"" + FromLoc.CountryName + "\"," +
                                 "\"Country destination\":\"" + ToLoc.CountryName + "\"}}]";
-                            var r = await Methods.AmplitudePOST(DataJson);
+                            var r = Methods.AmplitudePOST(DataJson);
 
                             SetTSOnResult(exres0);
                             user.SearchParameters = new SearchParam() { Origin = From, Destination = To, Date = searchdt, Pax = pax };
@@ -567,7 +568,7 @@ namespace StaffSearch
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) ? "Direct flights not found" : exres0.Alert);
+                                await botClient.SendTextMessageAsync(message.Chat, string.IsNullOrEmpty(exres0.Alert) || exres0.Alert == "Not Found" ? "Direct flights not found" : exres0.Alert);
                             }
                         }
                     }
@@ -730,7 +731,7 @@ namespace StaffSearch
                                 "\"dataSAFromAgent\":\"" + (Fl.AgentInfo != null ? "yes" : "no") + "\"," +
                                 "\"ageDataFromAgent\":" + (Fl.AgentInfo != null ? Fl.AgentInfo.TimePassed : -1) + "," +
                                 "\"agents\":\"" + (AgentExist ? "yes" : "no") + "\"}}]";
-                            var r = await Methods.AmplitudePOST(DataJson);
+                            var r = Methods.AmplitudePOST(DataJson);
                         }
                     }
                     else
@@ -805,9 +806,9 @@ namespace StaffSearch
                                 int AmountTokensForRequest = int.Parse(Properties.Settings.Default.AmountTokensForRequest);
                                 var Prof = await Methods.TokenProfile(user.Token.type + "_" + user.Token.id_user);
 
-                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"void\"," +
+                                string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"void\"," +
                                     "\"user_properties\":{\"paidStatus\":\"" + (Prof.Premium ? "premiumAccess" : "free plan") + "\"}}]";
-                                var r = await Methods.AmplitudePOST(DataJson);
+                                var r = Methods.AmplitudePOST(DataJson);
 
                                 eventLogBot.WriteEntry("TokenProfile: " + user.Token.type + "_" + user.Token.id_user + ", Prof: " + Newtonsoft.Json.JsonConvert.SerializeObject(Prof));
 
@@ -843,9 +844,9 @@ namespace StaffSearch
                                         await botClient.SendTextMessageAsync(callbackquery.Message.Chat, reqpost);
 
                                         //при успешном создании запроса к агенту
-                                        string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\", \"event_type\":\"tg user request to agent\"," +
-                                            "\"event_properties\":{\"ac\":\"" + pars[6] + "\",\"id_group\":" + remreq.IdGroup + ",\"platform\":\"telegram\"}}]";
-                                        var r = await Methods.AmplitudePOST(DataJson);
+                                        string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"tg user request to agent\"," +
+                                            "\"event_properties\":{\"ac\":\"" + pars[6] + "\",\"id_group\":" + remreq.IdGroup + "}}]";
+                                        var r = Methods.AmplitudePOST(DataJson);
 
                                     }
                                 }
@@ -889,10 +890,10 @@ namespace StaffSearch
                     }
 
                     //пользователь покинул агентский бот
-                    string DataJson = "[{\"user_id\":\"" + idus + "\", \"event_type\":\"tg left user\"," +
+                    string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg left user\"," +
                         "\"user_properties\":{\"is_requestor\":\"no\"}," +
                         "\"event_properties\":{\"ac\":\"" + user.own_ac + "\"}}]";
-                    var r = await Methods.AmplitudePOST(DataJson);
+                    var r = Methods.AmplitudePOST(DataJson);
                 }
                 else if (CM.Status == ChatMemberStatus.Member) // Разблокировал чат
                 {
