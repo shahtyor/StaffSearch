@@ -721,11 +721,28 @@ namespace StaffSearch
                                 await botClient.SendTextMessageAsync(message.Chat, res + res2 + Environment.NewLine + "No agents yet", null, ParseMode.Html);
                             }
 
+                            string ForRat = "None";
+                            if (!string.IsNullOrEmpty(Fl.Accuracy))
+                            {
+                                if (Fl.Forecast <= 1)
+                                {
+                                    ForRat = "Bad";
+                                }
+                                else if (Fl.Forecast <= 2)
+                                {
+                                    ForRat = "So-so";
+                                }
+                                else
+                                {
+                                    ForRat = "Good";
+                                }
+                            }
+
                             //Детализация варианта, посылаем такой из аппов
                             string DataJson = "[{\"user_id\":\"" + idus + "\",\"event_type\":\"Details show direct\",\"platform\":\"Telegram\"," +
                                 "\"event_properties\":{\"ac\":\"" + Fl.OperatingCarrier + "\"," +
                                 "\"ForecastAccuracy\":\"" + Fl.Accuracy + "\"," +
-                                "\"ForecastRating\":" + Fl.Forecast.ToString().Replace(",", ".") + "," +
+                                "\"ForecastRating\":\"" + ForRat + "\"," +
                                 "\"Rating\":\"" + (Fl.Rating == RType.Red ? "Bad" : (Fl.Rating == RType.Green ? "Good" : "Medium")) + "\"," +
                                 "\"dataClassesFromAgent\":\"" + (Fl.AgentInfo != null && !HideSomeInfo ? "yes" : "no") + "\"," +
                                 "\"dataSAFromAgent\":\"" + (Fl.AgentInfo != null ? "yes" : "no") + "\"," +

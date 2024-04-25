@@ -161,7 +161,7 @@ namespace StaffSearch
 
                             DataJson2 = "[{\"user_id\":\"" + id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg link profile\"," +
                                 "\"event_properties\":{\"bot\":\"sb\",\"system\":\"" + (token.type == 1 ? "apple" : "google") + "\"}," +
-                                "\"user_properties\":{\"customer_id\":\"" + token.type + "_" + token.id_user + "\",\"ac\":\"" + new_ac + "\"}}]";
+                                "\"user_properties\":{\"customerID\":\"" + token.type + "_" + token.id_user + "\",\"ac\":\"" + new_ac + "\"}}]";
                             r2 = AmplitudePOST(DataJson2);
 
                             user = new telegram_user() { id = id, first_use = DateTime.Now, own_ac = new_ac, is_reporter = false, is_requestor = true, Token = token };
