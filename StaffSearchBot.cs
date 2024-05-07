@@ -859,12 +859,6 @@ namespace StaffSearch
 
                                         var reqpost = "Request for flight " + pars[5] + " " + pars[1] + "-" + pars[2] + " at " + dreq.ToString("dd-MM-yyyy HH:mm") + " posted. Your balance: " + (remreq.Tokens.SubscribeTokens + remreq.Tokens.NonSubscribeTokens) + " token(s)";
                                         await botClient.SendTextMessageAsync(callbackquery.Message.Chat, reqpost);
-
-                                        //при успешном создании запроса к агенту
-                                        string DataJson = "[{\"user_id\":\"" + user.Token.type + "_" + user.Token.id_user + "\",\"platform\":\"Telegram\",\"event_type\":\"tg user request to agent\"," +
-                                            "\"event_properties\":{\"ac\":\"" + pars[6] + "\",\"id_group\":" + remreq.IdGroup + "}}]";
-                                        var r = Methods.AmplitudePOST(DataJson);
-
                                     }
                                 }
                             }
