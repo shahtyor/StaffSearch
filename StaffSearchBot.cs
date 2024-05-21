@@ -69,7 +69,7 @@ namespace StaffSearch
             eventLogBot.Source = "StaffSearch";
             eventLogBot.Log = "StaffSearchLog";
 
-            Methods.conn.Open();
+            //Methods.conn.Open();
         }
 
         protected override void OnStart(string[] args)
@@ -198,9 +198,9 @@ namespace StaffSearch
 
                     var intro = "Welcome to the Staff Airlines bot" + Environment.NewLine + Environment.NewLine +
                         "Main commands:" + Environment.NewLine + Environment.NewLine + "SEARCH FOR FLIGHTS" + Environment.NewLine +
-                        "To search, use airport or city codes. For example, NYCLAX - search from New York (NYC) to Los Angeles (LAX)." + Environment.NewLine +
-                        "NYCLAX - search for current date" + Environment.NewLine + "NYCLAX15 - search for the 15th" + Environment.NewLine +
-                        "NYCLAX15/2 - search for two passengers" + Environment.NewLine + Environment.NewLine + "FLIGHT DETAILS" + Environment.NewLine + "Number of line in the flights list, for example 1 or 15";
+                        "To search, use airport or city codes. For example, <b>NYCLAX</b> - search from New York (NYC) to Los Angeles (LAX)." + Environment.NewLine +
+                        "<b>NYCLAX</b> - search for current date" + Environment.NewLine + "<b>NYCLAX15</b> - search for the 15th" + Environment.NewLine +
+                        "<b>NYCLAX15/2</b> - search for two passengers" + Environment.NewLine + Environment.NewLine + "FLIGHT DETAILS" + Environment.NewLine + "Number of line in the flights list, for example <b>1</b> or <b>15</b>";
 
                     if (msg == "/start")
                     {
@@ -225,6 +225,8 @@ namespace StaffSearch
 
                         if (arrmsg.Length == 2)
                         {
+                            cache.Remove("start" + userid);
+
                             var payload = arrmsg[1].ToLower();
                             Guid gu;
                             bool isGuid0 = Guid.TryParse(payload, out gu);
@@ -232,14 +234,15 @@ namespace StaffSearch
                             {
                                 string alert = null;
                                 user = Methods.ProfileCommand(userid.Value, payload, eventLogBot, out alert);
+                                UpdateUserInCache(user);
                             }
                         }
 
                         if (user.Token == null)
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                            await botClient.SendTextMessageAsync(message.Chat, "To link your Staff Airlines profile to your Telegram ID, log into the Staff Airlines app (now only for iOS users, coming soon for Android users) in the “Profile” section and click “For request seat loads via Telegram”");
 
-                            cache.Add("User" + userid.Value, "entertoken", policyuser);
+                            //cache.Add("User" + userid.Value, "entertoken", policyuser);
                         }
                         else if (user.own_ac == "??")
                         {
@@ -249,7 +252,7 @@ namespace StaffSearch
                         }
                         else
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
+                            await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac.ToUpper() + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                         }
 
                         //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
