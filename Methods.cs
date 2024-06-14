@@ -900,6 +900,20 @@ namespace StaffSearch
             }
         }
 
+        public static void SetActive()
+        {
+            using (NpgsqlConnection connNA = new NpgsqlConnection(Properties.Settings.Default.ConnectionString))
+            {
+                connNA.Open();
+
+                NpgsqlCommand com = new NpgsqlCommand("update bot_active set ts=NOW() where id=1", connNA);
+                com.ExecuteNonQuery();
+                com.Dispose();
+                connNA.Close();
+                connNA.Dispose();
+            }
+        }
+
         public static void DelMessageParameters(long chat_id)
         {
             using (NpgsqlConnection conn = new NpgsqlConnection(Properties.Settings.Default.ConnectionString))

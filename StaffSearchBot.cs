@@ -95,11 +95,11 @@ namespace StaffSearch
 
                 System.Timers.Timer aTimer = new System.Timers.Timer();
 
-                /*aTimer.Elapsed += new ElapsedEventHandler(this.OnTimedEvent);
+                aTimer.Elapsed += new ElapsedEventHandler(this.OnTimedEvent);
 
                 aTimer.Interval = 60000;
                 aTimer.Enabled = true;
-                aTimer.Start();*/
+                aTimer.Start();
 
                 var cts = new CancellationTokenSource();
                 var cancellationToken = cts.Token;
@@ -120,18 +120,12 @@ namespace StaffSearch
             }
         }
 
-        /*public void OnTimedEvent(object source, ElapsedEventArgs e)
+        public void OnTimedEvent(object source, ElapsedEventArgs e)
         {
-            try
-            {
-                var task = Task.Run(async () => await FindResponse());
-            }
-            catch (Exception ex)
-            {
-                eventLogBot.WriteEntry(ex.Message + "..." + ex.StackTrace);
-            }
+            Methods.SetActive();
         }
 
+        /*
         public static async Task FindResponse()
         {
 
@@ -196,137 +190,167 @@ namespace StaffSearch
                         idus = user.Token.type + "_" + user.Token.id_user;
                     }
 
+                    string comm = "";
+                    var commexist = cache.Contains("User" + userid.Value);
+                    if (commexist) comm = (string)cache.Get("User" + userid.Value);
+
                     var intro = "Welcome to the Staff Airlines bot" + Environment.NewLine + Environment.NewLine +
                         "Main commands:" + Environment.NewLine + Environment.NewLine + "SEARCH FOR FLIGHTS" + Environment.NewLine +
                         "To search, use airport or city codes. For example, <b>NYCLAX</b> - search from New York (NYC) to Los Angeles (LAX)." + Environment.NewLine +
                         "<b>NYCLAX</b> - search for current date" + Environment.NewLine + "<b>NYCLAX15</b> - search for the 15th" + Environment.NewLine +
                         "<b>NYCLAX15/2</b> - search for two passengers" + Environment.NewLine + Environment.NewLine + "FLIGHT DETAILS" + Environment.NewLine + "Number of line in the flights list, for example <b>1</b> or <b>15</b>";
 
-                    if (msg == "/start")
+                    if (string.IsNullOrEmpty(comm))
                     {
-                        await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
-
-                        // отправляем событие «первое появление  пользователя в поисковом боте (/start)» в амплитуд
-                        string DataJson = "[{\"user_id\":\"" + message.Chat.Id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg sb join\"," +
-                             "\"user_properties\":{\"is_requestor\":\"no\"," +
-                             "\"id_telegram\":\"" + message.Chat.Id + "\"}}]";
-                        var r = Methods.AmplitudePOST(DataJson);
-
-                        if (arrmsg.Length == 1)
+                        if (msg == "/start")
                         {
-                            var startexist = cache.Contains("start" + userid);
-                            if (startexist)
+                            await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
+
+                            // отправляем событие «первое появление  пользователя в поисковом боте (/start)» в амплитуд
+                            string DataJson = "[{\"user_id\":\"" + message.Chat.Id + "\",\"platform\":\"Telegram\",\"event_type\":\"tg sb join\"," +
+                                 "\"user_properties\":{\"is_requestor\":\"no\"," +
+                                 "\"id_telegram\":\"" + message.Chat.Id + "\"}}]";
+                            var r = Methods.AmplitudePOST(DataJson);
+
+                            if (arrmsg.Length == 1)
                             {
-                                var startmsg = (string)cache.Get("start" + userid);
-                                arrmsg = startmsg.Split(' ');
+                                var startexist = cache.Contains("start" + userid);
+                                if (startexist)
+                                {
+                                    var startmsg = (string)cache.Get("start" + userid);
+                                    arrmsg = startmsg.Split(' ');
+                                    cache.Remove("start" + userid);
+                                }
+                            }
+
+                            if (arrmsg.Length == 2)
+                            {
                                 cache.Remove("start" + userid);
-                            }
-                        }
 
-                        if (arrmsg.Length == 2)
-                        {
-                            cache.Remove("start" + userid);
-
-                            var payload = arrmsg[1].ToLower();
-                            Guid gu;
-                            bool isGuid0 = Guid.TryParse(payload, out gu);
-                            if (isGuid0)
-                            {
-                                string alert = null;
-                                user = Methods.ProfileCommand(userid.Value, payload, eventLogBot, out alert);
-                                UpdateUserInCache(user);
-                            }
-                        }
-
-                        if (user.Token == null)
-                        {
-                            await botClient.SendTextMessageAsync(message.Chat, "To link your Staff Airlines profile to your Telegram ID, log into the Staff Airlines app (now only for iOS users, coming soon for Android users) in the “Profile” section and click “For request seat loads via Telegram”");
-
-                            //cache.Add("User" + userid.Value, "entertoken", policyuser);
-                        }
-                        else if (user.own_ac == "??")
-                        {
-                            await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
-
-                            cache.Add("User" + userid.Value, "preset", policyuser);
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac.ToUpper() + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
-                        }
-
-                        //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
-
-                        //cache.Add("User" + userid.Value, "entertoken", policyuser);
-
-                        return;
-                    }
-                    else if (message?.Text?.ToLower() == "/help")
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
-                        return;
-                    }
-                    else if (message?.Text?.ToLower() == "/profile")
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
-
-                        // отправляем событие «запрос uid для линковки профиля (/profile)» в амплитуд
-                        string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start link profile\"," +
-                            "\"event_properties\":{\"bot\":\"sb\"}}]";
-                        var r = Methods.AmplitudePOST(DataJson);
-
-                        cache.Add("User" + userid.Value, "entertoken", policyuser);
-
-                        return;
-                    }
-                    else if (message?.Text?.ToLower() == "/airline")
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code (for example: AA):");
-
-                        string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start set ac\"," +
-                            "\"event_properties\":{\"bot\":\"sb\"}}]";
-                        var r = Methods.AmplitudePOST(DataJson);
-
-                        cache.Add("User" + userid.Value, "preset", policyuser);
-
-                        return;
-                    }
-
-                    string comm = "";
-                    var commexist = cache.Contains("User" + userid.Value);
-                    if (commexist) comm = (string)cache.Get("User" + userid.Value);
-
-                    if (comm == "entertoken" && !string.IsNullOrEmpty(message.Text))
-                    {
-                        Guid gu;
-                        bool isGuid0 = Guid.TryParse(message.Text, out gu);
-
-                        if (isGuid0)
-                        {
-                            string alert = null;
-                            user = Methods.ProfileCommand(userid.Value, message.Text, eventLogBot, out alert);
-
-                            if (string.IsNullOrEmpty(alert))
-                            {
-                                UpdateUserInCache(user);
-                                //cache.Add(keyuser, user, policyuser);
-                                cache.Remove("User" + message.Chat.Id);
-
-                                if (user.own_ac == "??")
+                                var payload = arrmsg[1].ToLower();
+                                Guid gu;
+                                bool isGuid0 = Guid.TryParse(payload, out gu);
+                                if (isGuid0)
                                 {
-                                    await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
+                                    string alert = null;
+                                    user = Methods.ProfileCommand(userid.Value, payload, eventLogBot, out alert);
+                                    UpdateUserInCache(user);
+                                }
+                            }
 
-                                    cache.Add("User" + userid.Value, "preset", policyuser);
-                                }
-                                else
-                                {
-                                    await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All airlines" : user.permitted_ac) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
-                                }
+                            if (user.Token == null)
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "To link your Staff Airlines profile to your Telegram ID, log into the Staff Airlines app (now only for iOS users, coming soon for Android users) in the “Profile” section and click “For request seat loads via Telegram”");
+
+                                //cache.Add("User" + userid.Value, "entertoken", policyuser);
+                            }
+                            else if (user.own_ac == "??")
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
+
+                                cache.Add("User" + userid.Value, "preset", policyuser);
                             }
                             else
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, alert);
-                                if (user is null || user.id == 0 || user.Token is null)
+                                await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac.ToUpper() + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
+                            }
+
+                            //await botClient.SendTextMessageAsync(message.Chat, "Enter the token:");
+
+                            //cache.Add("User" + userid.Value, "entertoken", policyuser);
+
+                            return;
+                        }
+                        else if (user.Token == null)
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, "To link your Staff Airlines profile to your Telegram ID, log into the Staff Airlines app (now only for iOS users, coming soon for Android users) in the “Profile” section and click “For request seat loads via Telegram”");
+
+                            return;
+                        }
+                        else if (message?.Text?.ToLower() == "/help")
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, intro, parseMode: ParseMode.Html);
+                            return;
+                        }
+                        else if (message?.Text?.ToLower() == "/profile")
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
+
+                            // отправляем событие «запрос uid для линковки профиля (/profile)» в амплитуд
+                            string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start link profile\"," +
+                                "\"event_properties\":{\"bot\":\"sb\"}}]";
+                            var r = Methods.AmplitudePOST(DataJson);
+
+                            cache.Add("User" + userid.Value, "entertoken", policyuser);
+
+                            return;
+                        }
+                        else if (message?.Text?.ToLower() == "/airline")
+                        {
+                            await botClient.SendTextMessageAsync(message.Chat, "Specify your airline. Enter your airline's code (for example: AA):");
+
+                            string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg start set ac\"," +
+                                "\"event_properties\":{\"bot\":\"sb\"}}]";
+                            var r = Methods.AmplitudePOST(DataJson);
+
+                            cache.Add("User" + userid.Value, "preset", policyuser);
+
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        var messageText = message.Text.Replace("/", "");
+
+                        if (comm == "entertoken" && !string.IsNullOrEmpty(messageText))
+                        {
+                            Guid gu;
+                            bool isGuid0 = Guid.TryParse(messageText, out gu);
+
+                            if (isGuid0)
+                            {
+                                string alert = null;
+                                user = Methods.ProfileCommand(userid.Value, messageText, eventLogBot, out alert);
+
+                                if (string.IsNullOrEmpty(alert))
+                                {
+                                    UpdateUserInCache(user);
+                                    //cache.Add(keyuser, user, policyuser);
+                                    cache.Remove("User" + message.Chat.Id);
+
+                                    if (user.own_ac == "??")
+                                    {
+                                        await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Specify your airline. Enter your airline's code (for example: AA):");
+
+                                        cache.Add("User" + userid.Value, "preset", policyuser);
+                                    }
+                                    else
+                                    {
+                                        await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + user.own_ac + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(user.permitted_ac) ? "All airlines" : user.permitted_ac) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
+                                    }
+                                }
+                                else
+                                {
+                                    await botClient.SendTextMessageAsync(message.Chat, alert);
+                                    if (user is null || user.id == 0 || user.Token is null)
+                                    {
+                                        await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                                    }
+                                    else
+                                    {
+                                        cache.Remove("User" + message.Chat.Id);
+                                    }
+                                }
+                            }
+                            else if (messageText == "/back")
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "Later");
+                                cache.Remove("User" + message.Chat.Id);
+                            }
+                            else
+                            {
+                                await botClient.SendTextMessageAsync(message.Chat, "The UID must contain 32 digits/letters." + Environment.NewLine + "(For example: 7ece3818-c4b4-4f3a-b94e-82d37b1ff8a1)");
+                                if (user is null || user.Token is null)
                                 {
                                     await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
                                 }
@@ -335,67 +359,50 @@ namespace StaffSearch
                                     cache.Remove("User" + message.Chat.Id);
                                 }
                             }
+
+                            return;
                         }
-                        else if (message.Text == "/back")
+
+                        if (comm == "preset")
                         {
-                            await botClient.SendTextMessageAsync(message.Chat, "Later");
-                            cache.Remove("User" + message.Chat.Id);
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(message.Chat, "The UID must contain 32 digits/letters." + Environment.NewLine + "(For example: 7ece3818-c4b4-4f3a-b94e-82d37b1ff8a1)");
-                            if (user is null || user.Token is null)
+                            //string[] presetstr = message.Text.Split(' ');
+                            //if (presetstr.Length > 1)
+                            //{
+                            var ac = messageText;
+                            var test = Methods.TestAC(ac.ToUpper());
+                            if (test > 0)
                             {
-                                await botClient.SendTextMessageAsync(message.Chat, "Enter the UID (generate it in the Staff Airlines app in the Profile section, after logging in):");
+                                Methods.UpdateUserAC(message.Chat.Id, ac.ToUpper(), user.own_ac.ToUpper());
+                                var permitted = Methods.GetPermittedAC(ac.ToUpper());
+                                var sperm = string.Join("-", permitted.Select(p => p.Permit));
+                                user.own_ac = ac;
+                                user.permitted_ac = sperm;
+                                UpdateUserInCache(user);
+
+                                /*var ikm = new InlineKeyboardMarkup(new[]
+                                {
+                                    new[]
+                                    {
+                                        InlineKeyboardButton.WithCallbackData("Nopreset", "/nopreset"),
+                                    },
+                                });*/
+
+                                cache.Remove("User" + message.Chat.Id);
+
+                                string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg set ac\"," +
+                                    "\"user_properties\":{\"ac\":\"" + ac.ToUpper() + "\"}," +
+                                    "\"event_properties\":{\"bot\":\"sb\"}}]";
+                                var r = Methods.AmplitudePOST(DataJson);
+
+                                await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + ac.ToUpper() + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(sperm) ? "All airlines" : sperm) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
                             }
                             else
                             {
-                                cache.Remove("User" + message.Chat.Id);
+                                await botClient.SendTextMessageAsync(message.Chat, "Airline code" + ac + "not found! Enter your airline's code:");
                             }
+                            //}
+                            return;
                         }
-
-                        return;
-                    }
-
-                    if (comm == "preset")
-                    {
-                        //string[] presetstr = message.Text.Split(' ');
-                        //if (presetstr.Length > 1)
-                        //{
-                        var ac = message.Text;
-                        var test = Methods.TestAC(ac.ToUpper());
-                        if (test > 0)
-                        {
-                            Methods.UpdateUserAC(message.Chat.Id, ac.ToUpper(), user.own_ac.ToUpper());
-                            var permitted = Methods.GetPermittedAC(ac.ToUpper());
-                            var sperm = string.Join("-", permitted.Select(p => p.Permit));
-                            user.own_ac = ac;
-                            user.permitted_ac = sperm;
-                            UpdateUserInCache(user);
-
-                            /*var ikm = new InlineKeyboardMarkup(new[]
-                            {
-                                new[]
-                                {
-                                    InlineKeyboardButton.WithCallbackData("Nopreset", "/nopreset"),
-                                },
-                            });*/
-
-                            cache.Remove("User" + message.Chat.Id);
-
-                            string DataJson = "[{\"user_id\":\"" + idus + "\",\"platform\":\"Telegram\",\"event_type\":\"tg set ac\"," +
-                                "\"user_properties\":{\"ac\":\"" + ac.ToUpper() + "\"}," +
-                                "\"event_properties\":{\"bot\":\"sb\"}}]";
-                            var r = Methods.AmplitudePOST(DataJson);
-
-                            await botClient.SendTextMessageAsync(message.Chat, "Your airline: " + ac.ToUpper() + Environment.NewLine + "Airlines in results: " + (string.IsNullOrEmpty(sperm) ? "All airlines" : sperm) + Environment.NewLine + "Setup completed successfully. You can start using the bot!");
-                        }
-                        else
-                        {
-                            await botClient.SendTextMessageAsync(message.Chat, "Airline code" + ac + "not found! Enter your airline's code:");
-                        }
-                        //}
-                        return;
                     }
 
                     var command = message?.Text;
